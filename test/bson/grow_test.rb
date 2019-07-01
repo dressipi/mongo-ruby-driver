@@ -32,7 +32,7 @@ class Hash
   end
 end
 
-class Fixnum
+class Integer
   def to_bson
     {"0" => self}.to_bson
   end

@@ -35,7 +35,7 @@ module BSONV1
     # @param opts [Array, String]
     def initialize(pattern, *opts)
       @pattern = pattern
-      @options = opts.first.is_a?(Fixnum) ? opts.first : str_opts_to_int(opts.join)
+      @options = opts.first.is_a?(Integer) ? opts.first : str_opts_to_int(opts.join)
     end
 
     # Check equality of this wrapped Regexp with another.
