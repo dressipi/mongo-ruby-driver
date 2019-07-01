@@ -1,5 +1,5 @@
 Gem::Specification.new do |s|
-  s.name              = 'bson_ext'
+  s.name              = 'bsonv1_ext'
 
   s.version           = File.read(File.join(File.dirname(__FILE__), 'VERSION'))
   s.platform          = Gem::Platform::RUBY
@@ -25,5 +25,5 @@ Gem::Specification.new do |s|
   s.extensions        = ['ext/cbson/extconf.rb']
   s.has_rdoc          = 'yard'
 
-  s.add_dependency('bson', "~> #{s.version}")
+  s.add_dependency('bsonv1', "~> #{s.version}")
 end
