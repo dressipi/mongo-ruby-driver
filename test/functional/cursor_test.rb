@@ -16,8 +16,8 @@ require 'test_helper'
 require 'logger'
 
 class CursorTest < Test::Unit::TestCase
-  include Mongo
-  include Mongo::Constants
+  include MongoV1
+  include MongoV1::Constants
 
   def setup
     @connection = standard_connection
@@ -54,11 +54,11 @@ class CursorTest < Test::Unit::TestCase
     assert_equal 0, c.options & OP_QUERY_EXHAUST
 
     c.next
-    assert_raise Mongo::InvalidOperation do
+    assert_raise MongoV1::InvalidOperation do
       c.add_option(OP_QUERY_EXHAUST)
     end
 
-    assert_raise Mongo::InvalidOperation do
+    assert_raise MongoV1::InvalidOperation do
       c.add_option(OP_QUERY_EXHAUST)
     end
   end
@@ -156,7 +156,7 @@ class CursorTest < Test::Unit::TestCase
   def test_inspect
     selector = {:a => 1}
     cursor = @coll.find(selector)
-    assert_equal "<Mongo::Cursor:0x#{cursor.object_id.to_s(16)} namespace='#{@db.name}.#{@coll.name}' " +
+    assert_equal "<MongoV1::Cursor:0x#{cursor.object_id.to_s(16)} namespace='#{@db.name}.#{@coll.name}' " +
                      "@selector=#{selector.inspect} @cursor_id=#{cursor.cursor_id}>", cursor.inspect
   end
 
@@ -325,11 +325,11 @@ class CursorTest < Test::Unit::TestCase
 
   def test_timeout
     opts = Cursor.new(@coll).options
-    assert_equal 0, opts & Mongo::Constants::OP_QUERY_NO_CURSOR_TIMEOUT
+    assert_equal 0, opts & MongoV1::Constants::OP_QUERY_NO_CURSOR_TIMEOUT
 
     opts = Cursor.new(@coll, :timeout => false).options
-    assert_equal Mongo::Constants::OP_QUERY_NO_CURSOR_TIMEOUT,
-                 opts & Mongo::Constants::OP_QUERY_NO_CURSOR_TIMEOUT
+    assert_equal MongoV1::Constants::OP_QUERY_NO_CURSOR_TIMEOUT,
+                 opts & MongoV1::Constants::OP_QUERY_NO_CURSOR_TIMEOUT
   end
 
   def test_limit_exceptions
@@ -533,7 +533,7 @@ class CursorTest < Test::Unit::TestCase
     @coll.save(:i => 2)
     assert_equal 2, @coll.find.count
 
-    @coll.ensure_index(BSONV1::OrderedHash[:i, Mongo::ASCENDING])
+    @coll.ensure_index(BSONV1::OrderedHash[:i, MongoV1::ASCENDING])
 
     # Check that a named_hint can be specified
     assert_equal 1, @coll.find({ :i => 1 }, :named_hint => '_id_').count
@@ -541,7 +541,7 @@ class CursorTest < Test::Unit::TestCase
 
     # Verify that the hint is being sent to the server by providing a bad hint
     if @version > '2.6'
-      assert_raise Mongo::OperationFailure do
+      assert_raise MongoV1::OperationFailure do
         @coll.find({ :i => 1 }, :hint => 'bad_hint').count
       end
     else
@@ -550,14 +550,14 @@ class CursorTest < Test::Unit::TestCase
 
     # Verify that the named_hint is being sent to the server by providing a bad hint
     if @version > '2.6'
-      assert_raise Mongo::OperationFailure do
+      assert_raise MongoV1::OperationFailure do
         @coll.find({ :i => 1 }, :named_hint => 'bad_hint').count
       end
     else
       assert_equal 1, @coll.find({ :i => 1 }, :named_hint => 'bad_hint').count
     end
 
-    @coll.ensure_index(BSONV1::OrderedHash[:x, Mongo::ASCENDING], :sparse => true)
+    @coll.ensure_index(BSONV1::OrderedHash[:x, MongoV1::ASCENDING], :sparse => true)
 
     # The sparse index won't have any entries.
     # Check that count returns 0 when using the hint.
@@ -605,7 +605,7 @@ class CursorTest < Test::Unit::TestCase
 
     cursor = @coll.find({})
 
-    assert_raise_error Mongo::OperationFailure, "CURSOR_NOT_FOUND" do
+    assert_raise_error MongoV1::OperationFailure, "CURSOR_NOT_FOUND" do
       9999.times do
         cursor.next_document
         cursor.instance_variable_set(:@cursor_id, 1234567890)

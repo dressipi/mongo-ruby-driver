@@ -74,7 +74,7 @@ class ReplicaSetCursorTest < Test::Unit::TestCase
     insert_docs
 
     # Setup Direct Connections
-    @primary = Mongo::MongoClient.new(*@client.manager.primary)
+    @primary = MongoV1::MongoClient.new(*@client.manager.primary)
     authenticate_client(@primary)
   end
 
@@ -94,10 +94,10 @@ class ReplicaSetCursorTest < Test::Unit::TestCase
         cursor.next
         pool = cursor.instance_variable_get(:@pool)
         cursor.close
-        @read = Mongo::MongoClient.new(pool.host, pool.port, :slave_ok => true)
+        @read = MongoV1::MongoClient.new(pool.host, pool.port, :slave_ok => true)
         authenticate_client(@read)
         tag
-      rescue Mongo::ConnectionFailure
+      rescue MongoV1::ConnectionFailure
         false
       end
     end
@@ -112,7 +112,7 @@ class ReplicaSetCursorTest < Test::Unit::TestCase
     # set profiling level to 2 on client and member to which the query will be routed
     @client.db(TEST_DB).profiling_level = :all
     @client.secondaries.each do |node|
-      node = Mongo::MongoClient.new(node[0], node[1], :slave_ok => true)
+      node = MongoV1::MongoClient.new(node[0], node[1], :slave_ok => true)
       authenticate_client(node)
       node.db(TEST_DB).profiling_level = :all
     end
@@ -123,7 +123,7 @@ class ReplicaSetCursorTest < Test::Unit::TestCase
     # on client and other members set profiling level to 0
     @client.db(TEST_DB).profiling_level = :off
     @client.secondaries.each do |node|
-      node = Mongo::MongoClient.new(node[0], node[1], :slave_ok => true)
+      node = MongoV1::MongoClient.new(node[0], node[1], :slave_ok => true)
       authenticate_client(node)
       node.db(TEST_DB).profiling_level = :off
     end
@@ -173,7 +173,7 @@ class ReplicaSetCursorTest < Test::Unit::TestCase
       (@n_docs-2).times { @cursor.next }
       @cursor.close
       # an exception confirms the cursor has indeed been closed
-      assert_raise Mongo::OperationFailure do
+      assert_raise MongoV1::OperationFailure do
         cursor_clone.next
       end
     end
@@ -195,7 +195,7 @@ class ReplicaSetCursorTest < Test::Unit::TestCase
       assert_equal port, @cursor.instance_variable_get(:@pool).port
     end
     # an exception confirms the cursor has indeed been closed after query
-    assert_raise Mongo::OperationFailure do
+    assert_raise MongoV1::OperationFailure do
       cursor_clone.next
     end
   end

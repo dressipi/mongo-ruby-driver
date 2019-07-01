@@ -14,7 +14,7 @@
 
 module BulkAPIAuthTests
 
-  include Mongo
+  include MongoV1
 
   def init_auth_bulk
     # Set up the test db
@@ -100,7 +100,7 @@ module BulkAPIAuthTests
       bulk.find({:a => 1}).remove
       bulk.insert({:a => 2})
 
-      ex = assert_raise Mongo::BulkWriteError do
+      ex = assert_raise MongoV1::BulkWriteError do
         bulk.execute
       end
       result = ex.result
@@ -135,7 +135,7 @@ module BulkAPIAuthTests
       bulk.find({:a => 1}).remove_one
       bulk.insert({:a => 2})
 
-      ex = assert_raise Mongo::BulkWriteError do
+      ex = assert_raise MongoV1::BulkWriteError do
         bulk.execute
       end
       result = ex.result
@@ -159,7 +159,7 @@ module BulkAPIAuthTests
       bulk.insert({:_id => 1, :a => 2})
       bulk.find({:a => 1}).remove_one
 
-      ex = assert_raise Mongo::BulkWriteError do
+      ex = assert_raise MongoV1::BulkWriteError do
         bulk.execute
       end
       result = ex.result
@@ -194,7 +194,7 @@ module BulkAPIAuthTests
       bulk.insert({:_id => 1, :a => 1})
       bulk.find({:a => 1}).remove_one
 
-      ex = assert_raise Mongo::BulkWriteError do
+      ex = assert_raise MongoV1::BulkWriteError do
         bulk.execute
       end
       result = ex.result
@@ -219,7 +219,7 @@ module BulkAPIAuthTests
         bulk.insert({:_id => 2, :a => 1})
         bulk.find({:a => 1}).remove_one
         
-        ex = assert_raise Mongo::BulkWriteError do
+        ex = assert_raise MongoV1::BulkWriteError do
           bulk.execute({:w => 2})
         end
         result = ex.result

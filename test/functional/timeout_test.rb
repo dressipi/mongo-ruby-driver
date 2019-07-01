@@ -28,7 +28,7 @@ class TimeoutTest < Test::Unit::TestCase
 
     # Should timeout
     command = {:eval => "sleep(1000)"}
-    assert_raise Mongo::OperationTimeout do
+    assert_raise MongoV1::OperationTimeout do
       admin.command(command)
     end
   end

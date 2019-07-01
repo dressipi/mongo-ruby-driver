@@ -18,9 +18,9 @@ def insert_message(db, documents)
   documents = [documents] unless documents.is_a?(Array)
   message = ByteBuffer.new
   message.put_int(0)
-  Mongo::BSON_CODER.serialize_cstr(message, "#{db.name}.test")
-  documents.each { |doc| message.put_array(Mongo::BSON_CODER.new.serialize(doc, true).to_a) }
-  message = db.add_message_headers(Mongo::Constants::OP_INSERT, message)
+  MongoV1::BSON_CODER.serialize_cstr(message, "#{db.name}.test")
+  documents.each { |doc| message.put_array(MongoV1::BSON_CODER.new.serialize(doc, true).to_a) }
+  message = db.add_message_headers(MongoV1::Constants::OP_INSERT, message)
 end
 
 class DBUnitTest < Test::Unit::TestCase
@@ -95,28 +95,28 @@ class DBUnitTest < Test::Unit::TestCase
 
       should "raise an error if collection creation fails" do
         @db.expects(:command).returns({'ok' => 0})
-        assert_raise Mongo::MongoDBError do
+        assert_raise MongoV1::MongoDBError do
           @db.create_collection("foo")
         end
       end
 
       should "raise an error if getlasterror fails" do
         @db.expects(:command).returns({})
-        assert_raise Mongo::MongoDBError do
+        assert_raise MongoV1::MongoDBError do
           @db.get_last_error
         end
       end
 
       should "raise an error if drop_index fails" do
         @db.expects(:command).returns({})
-        assert_raise Mongo::MongoDBError do
+        assert_raise MongoV1::MongoDBError do
           @db.drop_index("foo", "bar")
         end
       end
 
       should "raise an error if set_profiling_level fails" do
         @db.expects(:command).returns({})
-        assert_raise Mongo::MongoDBError do
+        assert_raise MongoV1::MongoDBError do
           @db.profiling_level = :slow_only
         end
       end

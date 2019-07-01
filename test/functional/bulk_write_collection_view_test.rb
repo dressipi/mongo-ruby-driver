@@ -15,7 +15,7 @@
 require 'test_helper'
 require 'json'
 
-module Mongo
+module MongoV1
   class Collection
     public :batch_write
   end
@@ -28,7 +28,7 @@ module Mongo
       groups.collect do |op_type, documents|
         {
             op_type => @collection.name,
-            Mongo::CollectionWriter::WRITE_COMMAND_ARG_KEY[op_type] => documents,
+            MongoV1::CollectionWriter::WRITE_COMMAND_ARG_KEY[op_type] => documents,
             :ordered => @options[:ordered],
             :writeConcern => write_concern
         }
@@ -60,14 +60,14 @@ class BulkWriteCollectionViewTest < Test::Unit::TestCase
   end
 
   def assert_is_bulk_write_collection_view(view)
-    assert_equal Mongo::BulkWriteCollectionView, view.class
+    assert_equal MongoV1::BulkWriteCollectionView, view.class
   end
 
   def assert_bulk_exception(expected, message = '')
     ex = assert_raise BulkWriteError, message do
       pp yield
     end
-    assert_equal(Mongo::ErrorCode::MULTIPLE_ERRORS_OCCURRED, ex.error_code, message)
+    assert_equal(MongoV1::ErrorCode::MULTIPLE_ERRORS_OCCURRED, ex.error_code, message)
     assert_match_document(expected, ex.result, message)
   end
 
@@ -449,7 +449,7 @@ class BulkWriteCollectionViewTest < Test::Unit::TestCase
     should "handle single upsert - spec Handling upserts" do # chose array always for upserted value
       with_write_commands_and_operations(@db.connection) do |wire_version|
         @collection.remove
-        @collection.ensure_index(BSONV1::OrderedHash[:a, Mongo::ASCENDING], {:unique => true})
+        @collection.ensure_index(BSONV1::OrderedHash[:a, MongoV1::ASCENDING], {:unique => true})
         bulk = @collection.initialize_ordered_bulk_op
 
         assert_raise_error(MongoArgumentError, "non-nil query must be set via find") do
@@ -800,7 +800,7 @@ class BulkWriteCollectionViewTest < Test::Unit::TestCase
 
     should "handle empty bulk op" do
       with_write_commands_and_operations(@db.connection) do |wire_version|
-        assert_raise_error(MongoArgumentError, Mongo::BulkWriteCollectionView::EMPTY_BATCH_MSG) do
+        assert_raise_error(MongoArgumentError, MongoV1::BulkWriteCollectionView::EMPTY_BATCH_MSG) do
           @bulk.execute
         end
       end
@@ -809,7 +809,7 @@ class BulkWriteCollectionViewTest < Test::Unit::TestCase
     should "handle insert of overly large document" do
       large_doc = {"a" => "y"*(2*@client.max_message_size)}
       with_write_commands_and_operations(@db.connection) do |wire_version|
-        ex = assert_raise Mongo::BulkWriteError do
+        ex = assert_raise MongoV1::BulkWriteError do
           @collection.remove
           bulk = @collection.initialize_unordered_bulk_op
           bulk.insert(large_doc)
@@ -885,7 +885,7 @@ class BulkWriteCollectionViewTest < Test::Unit::TestCase
     should "run ordered bulk op - spec Modes of Execution" do
       with_write_commands_and_operations(@db.connection) do |wire_version|
         @collection.remove
-        @collection.ensure_index(BSONV1::OrderedHash[:a, Mongo::ASCENDING], {:unique => true})
+        @collection.ensure_index(BSONV1::OrderedHash[:a, MongoV1::ASCENDING], {:unique => true})
         @bulk.insert({:a => 1})
         @bulk.insert({:a => 2})
         @bulk.find({:a => 2}).update({'$set' => {:a => 1}}) # Clashes with unique index
@@ -900,7 +900,7 @@ class BulkWriteCollectionViewTest < Test::Unit::TestCase
     should "handle duplicate key error - spec Merging Results" do
       with_write_commands_and_operations(@db.connection) do |wire_version|
         @collection.remove
-        @collection.ensure_index(BSONV1::OrderedHash[:a, Mongo::ASCENDING], {:unique => true})
+        @collection.ensure_index(BSONV1::OrderedHash[:a, MongoV1::ASCENDING], {:unique => true})
         bulk = @collection.initialize_ordered_bulk_op
         bulk.insert({:a => 1})
         bulk.insert({:a => 2})
@@ -932,7 +932,7 @@ class BulkWriteCollectionViewTest < Test::Unit::TestCase
     should "report user index - spec Merging errors" do
       with_write_commands_and_operations(@db.connection) do |wire_version|
         @collection.remove
-        @collection.ensure_index(BSONV1::OrderedHash[:a, Mongo::ASCENDING], {:unique => true})
+        @collection.ensure_index(BSONV1::OrderedHash[:a, MongoV1::ASCENDING], {:unique => true})
         bulk = @collection.initialize_ordered_bulk_op
         bulk.insert({:a => 1})
         bulk.insert({:a => 2})
@@ -964,7 +964,7 @@ class BulkWriteCollectionViewTest < Test::Unit::TestCase
     should "handle multiple upsert - spec Handling upserts" do
       with_write_commands_and_operations(@db.connection) do |wire_version|
         @collection.remove
-        @collection.ensure_index(BSONV1::OrderedHash[:a, Mongo::ASCENDING], {:unique => true})
+        @collection.ensure_index(BSONV1::OrderedHash[:a, MongoV1::ASCENDING], {:unique => true})
         bulk = @collection.initialize_ordered_bulk_op
         bulk.find({:a => 1}).upsert.update({'$set' => {:a => 2}})
         bulk.find({:a => 3}).upsert.update({'$set' => {:a => 4}})
@@ -1054,7 +1054,7 @@ class BulkWriteCollectionViewTest < Test::Unit::TestCase
     should "run unordered bulk op - spec Modes of Execution" do
       with_write_commands_and_operations(@db.connection) do |wire_version|
         @collection.remove
-        @collection.ensure_index(BSONV1::OrderedHash[:a, Mongo::ASCENDING], {:unique => true})
+        @collection.ensure_index(BSONV1::OrderedHash[:a, MongoV1::ASCENDING], {:unique => true})
         bulk = @collection.initialize_unordered_bulk_op
         bulk.insert({:a => 1})
         bulk.insert({:a => 2})
@@ -1072,7 +1072,7 @@ class BulkWriteCollectionViewTest < Test::Unit::TestCase
     should "handle unordered errors - spec Merging Results" do
       with_write_commands_and_operations(@db.connection) do |wire_version|
         @collection.remove
-        @collection.ensure_index(BSONV1::OrderedHash[:a, Mongo::ASCENDING], {:unique => true})
+        @collection.ensure_index(BSONV1::OrderedHash[:a, MongoV1::ASCENDING], {:unique => true})
         bulk = @collection.initialize_unordered_bulk_op
         bulk.insert({:a => 1})
         bulk.find({:a => 1}).upsert.update({'$set' => {:a => 2}})

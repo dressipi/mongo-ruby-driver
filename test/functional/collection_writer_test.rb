@@ -14,7 +14,7 @@
 
 require 'test_helper'
 
-module Mongo
+module MongoV1
   class Collection
     public :batch_write
   end

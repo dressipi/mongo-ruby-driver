@@ -16,7 +16,7 @@ require 'test_helper'
 require 'shared/ssl_shared'
 
 class ReplicaSetSSLTest < Test::Unit::TestCase
-  include Mongo
+  include MongoV1
   include SSLTests
 
   SEEDS     = ['server:3000','server:3001','server:3002']

@@ -19,7 +19,7 @@ require 'shared/authentication/bulk_api_auth_shared'
 require 'shared/authentication/gssapi_shared'
 
 class ReplicaSetAuthenticationTest < Test::Unit::TestCase
-  include Mongo
+  include MongoV1
 
   include BasicAuthTests
   include SASLPlainTests

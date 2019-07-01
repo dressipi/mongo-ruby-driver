@@ -13,7 +13,7 @@
 # limitations under the License.
 
 module SSLTests
-  include Mongo
+  include MongoV1
 
   MONGODB_X509_USERNAME = 'CN=client,OU=kerneluser,O=10Gen,L=New York City,ST=New York,C=US'
   CERT_PATH             = "#{Dir.pwd}/test/fixtures/certificates/"
@@ -33,7 +33,7 @@ module SSLTests
   # Requires MongoDB not built with SSL
   #
   def test_ssl_not_configured
-    assert_raise Mongo::ConnectionTimeoutError do
+    assert_raise MongoV1::ConnectionTimeoutError do
       create_client(['localhost', 27017], :connect_timeout => 2, :ssl => true)
     end
   end
@@ -206,17 +206,17 @@ module SSLTests
     assert db.collection_names
 
     assert db.logout
-    assert_raise Mongo::OperationFailure do
+    assert_raise MongoV1::OperationFailure do
       db.collection_names
     end
 
     # username and valid certificate don't match
-    assert_raise Mongo::AuthenticationError do
+    assert_raise MongoV1::AuthenticationError do
       db.authenticate('test', nil, nil, nil, mechanism)
     end
 
     # username required
-    assert_raise Mongo::AuthenticationError do
+    assert_raise MongoV1::AuthenticationError do
       db.authenticate(nil, nil, nil, nil, mechanism)
     end
 

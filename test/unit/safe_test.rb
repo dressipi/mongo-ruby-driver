@@ -16,10 +16,10 @@ require 'test_helper'
 
 class SafeUnitTest < Test::Unit::TestCase
 
-  context "Write-Concern modes on Mongo::Connection " do
+  context "Write-Concern modes on MongoV1::Connection " do
     setup do
       @safe_value = {:w => 7, :j => false, :fsync => false, :wtimeout => nil}
-      @connection = Mongo::Connection.new('localhost', 27017, :safe => @safe_value, :connect => false)
+      @connection = MongoV1::Connection.new('localhost', 27017, :safe => @safe_value, :connect => false)
     end
 
     should "propogate to DB" do

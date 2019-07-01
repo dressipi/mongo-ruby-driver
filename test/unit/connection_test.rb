@@ -15,10 +15,10 @@
 require 'test_helper'
 
 class ConnectionUnitTest < Test::Unit::TestCase
-  context "Mongo::MongoClient initialization " do
+  context "MongoV1::MongoClient initialization " do
     context "given a single node" do
       setup do
-        @connection = Mongo::Connection.new('localhost', 27017, :safe => true, :connect => false)
+        @connection = MongoV1::Connection.new('localhost', 27017, :safe => true, :connect => false)
         TCPSocket.stubs(:new).returns(new_mock_socket)
 
         admin_db = new_mock_db
@@ -46,18 +46,18 @@ class ConnectionUnitTest < Test::Unit::TestCase
 
       should "not raise error if no host or port is supplied" do
         assert_nothing_raised do
-          Mongo::Connection.new(:safe => true, :connect => false)
+          MongoV1::Connection.new(:safe => true, :connect => false)
         end
         assert_nothing_raised do
-          Mongo::Connection.new('localhost', :safe => true, :connect => false)
+          MongoV1::Connection.new('localhost', :safe => true, :connect => false)
         end
       end
 
       should "warn if invalid options are specified" do
-        connection = Mongo::Connection.allocate
+        connection = MongoV1::Connection.allocate
         opts = {:connect => false}
 
-        Mongo::ReplSetConnection::REPL_SET_OPTS.each do |opt|
+        MongoV1::ReplSetConnection::REPL_SET_OPTS.each do |opt|
           connection.expects(:warn).with("#{opt} is not a valid option for #{connection.class}")
           opts[opt] = true
         end
@@ -70,7 +70,7 @@ class ConnectionUnitTest < Test::Unit::TestCase
 
     context "initializing with a unix socket" do
       setup do
-        @connection = Mongo::Connection.new('/tmp/mongod.sock', :safe => true, :connect => false)
+        @connection = MongoV1::Connection.new('/tmp/mongod.sock', :safe => true, :connect => false)
         UNIXSocket.stubs(:new).returns(new_mock_unix_socket)
       end
       should "parse a unix socket" do
@@ -80,7 +80,7 @@ class ConnectionUnitTest < Test::Unit::TestCase
 
     context "initializing with a unix socket in uri" do
       setup do
-          @connection = Mongo::Connection.from_uri("mongodb:///tmp/mongod.sock", :connect => false)
+          @connection = MongoV1::Connection.from_uri("mongodb:///tmp/mongod.sock", :connect => false)
           UNIXSocket.stubs(:new).returns(new_mock_unix_socket)
       end
       should "parse a unix socket" do
@@ -90,53 +90,53 @@ class ConnectionUnitTest < Test::Unit::TestCase
 
     context "initializing with a mongodb uri" do
       should "parse a simple uri" do
-        @connection = Mongo::Connection.from_uri("mongodb://localhost", :connect => false)
+        @connection = MongoV1::Connection.from_uri("mongodb://localhost", :connect => false)
         assert_equal ['localhost', 27017], @connection.host_port
       end
 
       should "set auth source" do
-        @connection = Mongo::Connection.from_uri("mongodb://user:pass@localhost?authSource=foo", :connect => false)
+        @connection = MongoV1::Connection.from_uri("mongodb://user:pass@localhost?authSource=foo", :connect => false)
         assert_equal 'foo', @connection.auths.first[:source]
       end
 
       should "set auth mechanism" do
-        @connection = Mongo::Connection.from_uri("mongodb://user@localhost?authMechanism=MONGODB-X509", :connect => false)
+        @connection = MongoV1::Connection.from_uri("mongodb://user@localhost?authMechanism=MONGODB-X509", :connect => false)
         assert_equal 'MONGODB-X509', @connection.auths.first[:mechanism]
 
         assert_raise MongoArgumentError do
-          Mongo::Connection.from_uri("mongodb://localhost?authMechanism=INVALID", :connect => false)
+          MongoV1::Connection.from_uri("mongodb://localhost?authMechanism=INVALID", :connect => false)
         end
       end
 
       should "allow a complex host names" do
         host_name = "foo.bar-12345.org"
-        @connection = Mongo::Connection.from_uri("mongodb://#{host_name}", :connect => false)
+        @connection = MongoV1::Connection.from_uri("mongodb://#{host_name}", :connect => false)
         assert_equal [host_name, 27017], @connection.host_port
       end
 
       should "allow db without username and password" do
         host_name = "foo.bar-12345.org"
-        @connection = Mongo::Connection.from_uri("mongodb://#{host_name}/foo", :connect => false)
+        @connection = MongoV1::Connection.from_uri("mongodb://#{host_name}/foo", :connect => false)
         assert_equal [host_name, 27017], @connection.host_port
       end
 
       should "set safe options on connection" do
         host_name = "localhost"
         opts = "safe=true&w=2&wtimeoutMS=1000&fsync=true&journal=true"
-        @connection = Mongo::Connection.from_uri("mongodb://#{host_name}/foo?#{opts}", :connect => false)
+        @connection = MongoV1::Connection.from_uri("mongodb://#{host_name}/foo?#{opts}", :connect => false)
         assert_equal({:w => 2, :wtimeout => 1000, :fsync => true, :j => true}, @connection.write_concern)
       end
 
       should "set timeout options on connection" do
         host_name = "localhost"
         opts = "connectTimeoutMS=1000&socketTimeoutMS=5000"
-        @connection = Mongo::Connection.from_uri("mongodb://#{host_name}/foo?#{opts}", :connect => false)
+        @connection = MongoV1::Connection.from_uri("mongodb://#{host_name}/foo?#{opts}", :connect => false)
         assert_equal 1, @connection.connect_timeout
         assert_equal 5, @connection.op_timeout
       end
 
       should "parse a uri with a hyphen & underscore in the username or password" do
-        @connection = Mongo::Connection.from_uri("mongodb://hyphen-user_name:p-s_s@localhost:27017/db", :connect => false)
+        @connection = MongoV1::Connection.from_uri("mongodb://hyphen-user_name:p-s_s@localhost:27017/db", :connect => false)
         assert_equal ['localhost', 27017], @connection.host_port
 
         auth_hash = {
@@ -152,7 +152,7 @@ class ConnectionUnitTest < Test::Unit::TestCase
 
       should "attempt to connect" do
         TCPSocket.stubs(:new).returns(new_mock_socket)
-        @connection = Mongo::Connection.from_uri("mongodb://localhost", :connect => false)
+        @connection = MongoV1::Connection.from_uri("mongodb://localhost", :connect => false)
 
         admin_db = new_mock_db
         admin_db.expects(:command).returns({'ok' => 1, 'ismaster' => 1})
@@ -162,23 +162,23 @@ class ConnectionUnitTest < Test::Unit::TestCase
 
       should "raise an error on invalid uris" do
         assert_raise MongoArgumentError do
-          Mongo::Connection.from_uri("mongo://localhost", :connect => false)
+          MongoV1::Connection.from_uri("mongo://localhost", :connect => false)
         end
 
         assert_raise MongoArgumentError do
-          Mongo::Connection.from_uri("mongodb://localhost:abc", :connect => false)
+          MongoV1::Connection.from_uri("mongodb://localhost:abc", :connect => false)
         end
       end
 
       should "require password if using legacy auth and username present" do
-        assert Mongo::Connection.from_uri("mongodb://kyle:jones@localhost/db", :connect => false)
+        assert MongoV1::Connection.from_uri("mongodb://kyle:jones@localhost/db", :connect => false)
 
         assert_raise MongoArgumentError do
-          Mongo::Connection.from_uri("mongodb://kyle:@localhost", :connect => false)
+          MongoV1::Connection.from_uri("mongodb://kyle:@localhost", :connect => false)
         end
 
         assert_raise MongoArgumentError do
-          Mongo::Connection.from_uri("mongodb://kyle@localhost", :connect => false)
+          MongoV1::Connection.from_uri("mongodb://kyle@localhost", :connect => false)
         end
       end
     end
@@ -187,7 +187,7 @@ class ConnectionUnitTest < Test::Unit::TestCase
       should "parse a simple uri" do
         uri = "mongodb://localhost?connect=false"
         with_preserved_env_uri(uri) do
-          @connection = Mongo::Connection.new
+          @connection = MongoV1::Connection.new
           assert_equal ['localhost', 27017], @connection.host_port
         end
       end
@@ -195,7 +195,7 @@ class ConnectionUnitTest < Test::Unit::TestCase
       should "set auth source" do
         uri = "mongodb://user:pass@localhost?authSource=foo&connect=false"
         with_preserved_env_uri(uri) do
-          @connection = Mongo::Connection.new
+          @connection = MongoV1::Connection.new
           assert_equal 'foo', @connection.auths.first[:source]
         end
       end
@@ -203,12 +203,12 @@ class ConnectionUnitTest < Test::Unit::TestCase
       should "set auth mechanism" do
         uri = "mongodb://user@localhost?authMechanism=MONGODB-X509&connect=false"
         with_preserved_env_uri(uri) do
-          @connection = Mongo::Connection.new
+          @connection = MongoV1::Connection.new
           assert_equal 'MONGODB-X509', @connection.auths.first[:mechanism]
 
           ENV['MONGODB_URI'] = "mongodb://user@localhost?authMechanism=INVALID&connect=false"
           assert_raise MongoArgumentError do
-            Mongo::Connection.new
+            MongoV1::Connection.new
           end
         end
       end
@@ -217,7 +217,7 @@ class ConnectionUnitTest < Test::Unit::TestCase
         host_name = "foo.bar-12345.org"
         uri = "mongodb://#{host_name}?connect=false"
         with_preserved_env_uri(uri) do
-          @connection = Mongo::Connection.new
+          @connection = MongoV1::Connection.new
           assert_equal [host_name, 27017], @connection.host_port
         end
       end
@@ -226,7 +226,7 @@ class ConnectionUnitTest < Test::Unit::TestCase
         host_name = "foo.bar-12345.org"
         uri = "mongodb://#{host_name}/foo?connect=false"
         with_preserved_env_uri(uri) do
-          @connection = Mongo::Connection.new
+          @connection = MongoV1::Connection.new
           assert_equal [host_name, 27017], @connection.host_port
         end
       end
@@ -236,7 +236,7 @@ class ConnectionUnitTest < Test::Unit::TestCase
         opts = "safe=true&w=2&wtimeoutMS=1000&fsync=true&journal=true&connect=false"
         uri = "mongodb://#{host_name}/foo?#{opts}"
         with_preserved_env_uri(uri) do
-          @connection = Mongo::Connection.new
+          @connection = MongoV1::Connection.new
           assert_equal({:w => 2, :wtimeout => 1000, :fsync => true, :j => true}, @connection.safe)
         end
       end
@@ -246,7 +246,7 @@ class ConnectionUnitTest < Test::Unit::TestCase
         opts = "connectTimeoutMS=1000&socketTimeoutMS=5000&connect=false"
         uri = "mongodb://#{host_name}/foo?#{opts}"
         with_preserved_env_uri(uri) do
-          @connection = Mongo::Connection.new
+          @connection = MongoV1::Connection.new
           assert_equal 1, @connection.connect_timeout
           assert_equal 5, @connection.op_timeout
         end
@@ -255,7 +255,7 @@ class ConnectionUnitTest < Test::Unit::TestCase
       should "parse a uri with a hyphen & underscore in the username or password" do
         uri = "mongodb://hyphen-user_name:p-s_s@localhost:27017/db?connect=false"
         with_preserved_env_uri(uri) do
-          @connection = Mongo::Connection.new
+          @connection = MongoV1::Connection.new
           assert_equal ['localhost', 27017], @connection.host_port
 
           auth_hash = {
@@ -274,7 +274,7 @@ class ConnectionUnitTest < Test::Unit::TestCase
         TCPSocket.stubs(:new).returns(new_mock_socket)
         uri = "mongodb://localhost?connect=false"
         with_preserved_env_uri(uri) do
-          @connection = Mongo::Connection.new
+          @connection = MongoV1::Connection.new
 
           admin_db = new_mock_db
           admin_db.expects(:command).returns({'ok' => 1, 'ismaster' => 1})
@@ -287,12 +287,12 @@ class ConnectionUnitTest < Test::Unit::TestCase
         uri = "mongo://localhost"
         with_preserved_env_uri(uri) do
           assert_raise MongoArgumentError do
-            Mongo::Connection.new
+            MongoV1::Connection.new
           end
 
           ENV['MONGODB_URI'] = "mongodb://localhost:abc"
           assert_raise MongoArgumentError do
-            Mongo::Connection.new
+            MongoV1::Connection.new
           end
         end
       end
@@ -300,16 +300,16 @@ class ConnectionUnitTest < Test::Unit::TestCase
       should "require password if using legacy auth and username present" do
         uri = "mongodb://kyle:jones@localhost/db?connect=false"
         with_preserved_env_uri(uri) do
-          assert Mongo::Connection.new
+          assert MongoV1::Connection.new
 
           ENV['MONGODB_URI'] = "mongodb://kyle:@localhost?connect=false"
           assert_raise MongoArgumentError do
-            Mongo::Connection.new
+            MongoV1::Connection.new
           end
 
           ENV['MONGODB_URI'] = "mongodb://kyle@localhost?connect=false"
           assert_raise MongoArgumentError do
-            Mongo::Connection.new
+            MongoV1::Connection.new
           end
         end
       end
@@ -317,16 +317,16 @@ class ConnectionUnitTest < Test::Unit::TestCase
       should "require password if using PLAIN auth and username present" do
         uri = "mongodb://kyle:jones@localhost/db?connect=false&authMechanism=PLAIN"
         with_preserved_env_uri(uri) do
-          assert Mongo::Connection.new
+          assert MongoV1::Connection.new
 
           ENV['MONGODB_URI'] = "mongodb://kyle:@localhost?connect=false&authMechanism=PLAIN"
           assert_raise MongoArgumentError do
-            Mongo::Connection.new
+            MongoV1::Connection.new
           end
 
           ENV['MONGODB_URI'] = "mongodb://kyle@localhost?connect=false&authMechanism=PLAIN"
           assert_raise MongoArgumentError do
-            Mongo::Connection.new
+            MongoV1::Connection.new
           end
         end
       end

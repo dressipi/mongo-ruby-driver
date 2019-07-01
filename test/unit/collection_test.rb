@@ -14,7 +14,7 @@
 
 require 'test_helper'
 
-module Mongo
+module MongoV1
   class Collection
     attr_reader :operation_writer,
                 :command_writer
@@ -106,15 +106,15 @@ class CollectionUnitTest < Test::Unit::TestCase
     should "not call insert for each ensure_index call" do
       @coll.expects(:generate_indexes).once
 
-      @coll.ensure_index [["x", Mongo::DESCENDING]]
-      @coll.ensure_index [["x", Mongo::DESCENDING]]
+      @coll.ensure_index [["x", MongoV1::DESCENDING]]
+      @coll.ensure_index [["x", MongoV1::DESCENDING]]
     end
 
     should "call generate_indexes for a new type on the same field for ensure_index" do
       @coll.expects(:generate_indexes).twice
 
-      @coll.ensure_index [["x", Mongo::DESCENDING]]
-      @coll.ensure_index [["x", Mongo::ASCENDING]]
+      @coll.ensure_index [["x", MongoV1::DESCENDING]]
+      @coll.ensure_index [["x", MongoV1::ASCENDING]]
     end
 
     should "call generate_indexes twice because the cache time is 0 seconds" do
@@ -122,8 +122,8 @@ class CollectionUnitTest < Test::Unit::TestCase
       @coll = @db.collection('collection-unit-test')
       @coll.expects(:generate_indexes).twice
 
-      @coll.ensure_index [["x", Mongo::DESCENDING]]
-      @coll.ensure_index [["x", Mongo::DESCENDING]]
+      @coll.ensure_index [["x", MongoV1::DESCENDING]]
+      @coll.ensure_index [["x", MongoV1::DESCENDING]]
     end
 
     should "call generate_indexes for each key when calling ensure_indexes" do
@@ -133,25 +133,25 @@ class CollectionUnitTest < Test::Unit::TestCase
         a == {"x"=>-1, "y"=>-1}
       end
 
-      @coll.ensure_index [["x", Mongo::DESCENDING], ["y", Mongo::DESCENDING]]
+      @coll.ensure_index [["x", MongoV1::DESCENDING], ["y", MongoV1::DESCENDING]]
     end
 
     should "call generate_indexes for each key when calling ensure_indexes with a hash" do
       @db.cache_time = 300
       @coll = @db.collection('collection-unit-test')
       oh = BSONV1::OrderedHash.new
-      oh['x'] = Mongo::DESCENDING
-      oh['y'] = Mongo::DESCENDING
+      oh['x'] = MongoV1::DESCENDING
+      oh['y'] = MongoV1::DESCENDING
       @coll.expects(:generate_indexes).once.with do |a, b, c|
         a == oh
       end
 
       if RUBY_VERSION > '1.9'
-          @coll.ensure_index({"x" => Mongo::DESCENDING, "y" => Mongo::DESCENDING})
+          @coll.ensure_index({"x" => MongoV1::DESCENDING, "y" => MongoV1::DESCENDING})
       else
           ordered_hash = BSONV1::OrderedHash.new
-          ordered_hash['x'] = Mongo::DESCENDING
-          ordered_hash['y'] = Mongo::DESCENDING
+          ordered_hash['x'] = MongoV1::DESCENDING
+          ordered_hash['y'] = MongoV1::DESCENDING
           @coll.ensure_index(ordered_hash)
       end
     end

@@ -46,12 +46,12 @@ module BasicAuthTests
   end
 
   def test_descriptive_mech_error
-    assert_raise_error Mongo::MongoArgumentError, Mongo::Authentication::MECHANISM_ERROR do
+    assert_raise_error MongoV1::MongoArgumentError, MongoV1::Authentication::MECHANISM_ERROR do
       @db.authenticate('emily', nil, nil, nil, 'FAKE_MECHANISM')
     end
-    assert_raise_error Mongo::MongoArgumentError, Mongo::Authentication::MECHANISM_ERROR do
+    assert_raise_error MongoV1::MongoArgumentError, MongoV1::Authentication::MECHANISM_ERROR do
       uri = "mongodb://user:pwd@host:port/example?authSource=$external&authMechanism=FAKE_MECHANISM"
-      Mongo::MongoClient.from_uri(uri)
+      MongoV1::MongoClient.from_uri(uri)
     end
   end
 
@@ -76,7 +76,7 @@ module BasicAuthTests
 
     # update user
     silently { @db.add_user(@test_user, 'updated') }
-    assert_raise Mongo::AuthenticationError do
+    assert_raise MongoV1::AuthenticationError do
       @db.authenticate('bob', 'user')
     end
     assert @db.authenticate('bob', 'updated')
@@ -88,7 +88,7 @@ module BasicAuthTests
     if @client.server_version < '2.5'
       assert_equal false, @db.remove_user('joe')
     else
-      assert_raise Mongo::OperationFailure do
+      assert_raise MongoV1::OperationFailure do
         assert @db.remove_user('joe')
       end
     end
@@ -102,7 +102,7 @@ module BasicAuthTests
 
   def test_authenticate_non_existent_user
     init_auth_basic
-    assert_raise Mongo::AuthenticationError do
+    assert_raise MongoV1::AuthenticationError do
       @db.authenticate('frank', 'thetank')
     end
   end
@@ -131,7 +131,7 @@ module BasicAuthTests
     silently { @db.add_user(@test_user, @test_user_pwd) }
 
     uri    = "mongodb://#{@test_user}:#{@test_user_pwd}@#{@host_info}/#{@db.name}"
-    client = Mongo::URIParser.new(uri).connection
+    client = MongoV1::URIParser.new(uri).connection
 
     assert client
     assert_equal client.auths.size, 1
@@ -212,7 +212,7 @@ module BasicAuthTests
       @admin.logout
 
       # validate that direct authentication is not allowed
-      assert_raise Mongo::AuthenticationError do
+      assert_raise MongoV1::AuthenticationError do
         @db.authenticate('emily', 'password')
       end
 
@@ -220,7 +220,7 @@ module BasicAuthTests
       assert accounts.authenticate('emily', 'password')
       assert @db.collection_names
       accounts.logout
-      assert_raise Mongo::OperationFailure do
+      assert_raise MongoV1::OperationFailure do
         @db.collection_names
       end
 
@@ -228,7 +228,7 @@ module BasicAuthTests
       @db.authenticate('emily', 'password', nil, accounts.name)
       assert @db.collection_names
       accounts.logout
-      assert_raise Mongo::OperationFailure do
+      assert_raise MongoV1::OperationFailure do
         @db.collection_names
       end
 
@@ -250,7 +250,7 @@ module BasicAuthTests
       @admin.logout
 
       silently { @db.authenticate('emily', 'password') }
-      assert_raise Mongo::OperationFailure do
+      assert_raise MongoV1::OperationFailure do
         @db['test'].insert({})
       end
       @db.logout

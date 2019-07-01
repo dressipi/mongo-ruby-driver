@@ -17,7 +17,7 @@ require 'logger'
 
 class ClientTest < Test::Unit::TestCase
 
-  include Mongo
+  include MongoV1
   include BSON
 
   def setup
@@ -29,7 +29,7 @@ class ClientTest < Test::Unit::TestCase
   end
 
   def test_connection_failure
-    assert_raise Mongo::ConnectionFailure do
+    assert_raise MongoV1::ConnectionFailure do
       MongoClient.new('localhost', 27347)
     end
   end
@@ -42,7 +42,7 @@ class ClientTest < Test::Unit::TestCase
   def test_server_info
     server_info = @client.server_info
     assert server_info.keys.include?("version")
-    assert Mongo::Support.ok?(server_info)
+    assert MongoV1::Support.ok?(server_info)
   end
 
   def test_ping
@@ -187,12 +187,12 @@ class ClientTest < Test::Unit::TestCase
   def test_invalid_database_names
     assert_raise TypeError do @client.db(4) end
 
-    assert_raise Mongo::InvalidNSName do @client.db('') end
-    assert_raise Mongo::InvalidNSName do @client.db('te$t') end
-    assert_raise Mongo::InvalidNSName do @client.db('te.t') end
-    assert_raise Mongo::InvalidNSName do @client.db('te\\t') end
-    assert_raise Mongo::InvalidNSName do @client.db('te/t') end
-    assert_raise Mongo::InvalidNSName do @client.db('te st') end
+    assert_raise MongoV1::InvalidNSName do @client.db('') end
+    assert_raise MongoV1::InvalidNSName do @client.db('te$t') end
+    assert_raise MongoV1::InvalidNSName do @client.db('te.t') end
+    assert_raise MongoV1::InvalidNSName do @client.db('te\\t') end
+    assert_raise MongoV1::InvalidNSName do @client.db('te/t') end
+    assert_raise MongoV1::InvalidNSName do @client.db('te st') end
   end
 
   def test_options_passed_to_db
@@ -354,7 +354,7 @@ class ClientTest < Test::Unit::TestCase
     conn.expects(:[]).with('admin').returns(admin_db)
 
     conn.connect
-    assert_equal Mongo::DEFAULT_MAX_BSON_SIZE, conn.max_bson_size
+    assert_equal MongoV1::DEFAULT_MAX_BSON_SIZE, conn.max_bson_size
   end
 
   def test_max_message_size_with_no_reported_max_size
@@ -365,7 +365,7 @@ class ClientTest < Test::Unit::TestCase
     conn.expects(:[]).with('admin').returns(admin_db)
 
     conn.connect
-    assert_equal Mongo::DEFAULT_MAX_BSON_SIZE * Mongo::MESSAGE_SIZE_FACTOR, conn.max_message_size
+    assert_equal MongoV1::DEFAULT_MAX_BSON_SIZE * MongoV1::MESSAGE_SIZE_FACTOR, conn.max_message_size
   end
 
   def test_max_wire_version_and_min_wire_version_values
@@ -391,7 +391,7 @@ class ClientTest < Test::Unit::TestCase
 
     assert_equal 0, conn.max_wire_version
     assert_equal 0, conn.min_wire_version
-    assert_equal Mongo::MongoClient::DEFAULT_MAX_WRITE_BATCH_SIZE, conn.max_write_batch_size
+    assert_equal MongoV1::MongoClient::DEFAULT_MAX_WRITE_BATCH_SIZE, conn.max_write_batch_size
   end
 
   def test_wire_version_feature
@@ -406,14 +406,14 @@ class ClientTest < Test::Unit::TestCase
 
   def test_wire_version_not_in_range
     [
-      [Mongo::MongoClient::MAX_WIRE_VERSION+1, Mongo::MongoClient::MAX_WIRE_VERSION+1],
-      [Mongo::MongoClient::MIN_WIRE_VERSION-1, Mongo::MongoClient::MIN_WIRE_VERSION-1]
+      [MongoV1::MongoClient::MAX_WIRE_VERSION+1, MongoV1::MongoClient::MAX_WIRE_VERSION+1],
+      [MongoV1::MongoClient::MIN_WIRE_VERSION-1, MongoV1::MongoClient::MIN_WIRE_VERSION-1]
     ].each do |min_wire_version, max_wire_version|
       conn = standard_connection(:connect => false)
       admin_db = Object.new
       admin_db.expects(:command).returns({'ok' => 1, 'ismaster' => 1, 'maxWireVersion' => max_wire_version, 'minWireVersion' => min_wire_version})
       conn.expects(:[]).with('admin').returns(admin_db)
-      assert_raises Mongo::ConnectionFailure do
+      assert_raises MongoV1::ConnectionFailure do
         conn.connect
       end
     end
@@ -444,7 +444,7 @@ class ClientTest < Test::Unit::TestCase
     dropped_socket.stub_everything
 
     conn.primary_pool.host = 'localhost'
-    conn.primary_pool.port = Mongo::MongoClient::DEFAULT_PORT
+    conn.primary_pool.port = MongoV1::MongoClient::DEFAULT_PORT
     conn.primary_pool.instance_variable_set("@pids", {dropped_socket => Process.pid})
     conn.primary_pool.instance_variable_set("@sockets", [dropped_socket])
 
@@ -455,18 +455,18 @@ class ClientTest < Test::Unit::TestCase
     conn = MongoClient.new
     authenticate_client(conn)
     assert conn.active?
-    assert_equal Mongo::MongoClient::DEFAULT_OP_TIMEOUT, conn.op_timeout
+    assert_equal MongoV1::MongoClient::DEFAULT_OP_TIMEOUT, conn.op_timeout
 
     pool = conn.primary_pool
     socket = pool.instance_variable_get(:@thread_ids_to_sockets)[Thread.current.object_id]
 
-    socket.stubs(:read).raises(Mongo::OperationTimeout)
+    socket.stubs(:read).raises(MongoV1::OperationTimeout)
     assert_equal false, conn.active?
   end
 
   context "Saved authentications" do
     setup do
-      @client = Mongo::MongoClient.new
+      @client = MongoV1::MongoClient.new
 
       @auth = {
           :db_name   => TEST_DB,
@@ -492,7 +492,7 @@ class ClientTest < Test::Unit::TestCase
          :mechanism => nil
        }
 
-       assert_raise Mongo::MongoArgumentError do
+       assert_raise MongoV1::MongoArgumentError do
          @client.add_auth(
            auth[:db_name],
            auth[:username],

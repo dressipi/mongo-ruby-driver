@@ -95,9 +95,9 @@ class ReplicaSetClientTest < Test::Unit::TestCase
     @client[TEST_DB]['bar'].save({:a => 1}, {:w => 3})
     assert @client[TEST_DB]['bar'].find_one
 
-    primary = Mongo::MongoClient.new(*@client.primary)
+    primary = MongoV1::MongoClient.new(*@client.primary)
     authenticate_client(primary)
-    assert_raise Mongo::ConnectionFailure do
+    assert_raise MongoV1::ConnectionFailure do
       perform_step_down(primary)
     end
     assert @client.connected?
@@ -128,9 +128,9 @@ class ReplicaSetClientTest < Test::Unit::TestCase
     @client = MongoReplicaSetClient.from_uri(@uri)
     assert @client.connected?
 
-    primary = Mongo::MongoClient.new(*@client.primary)
+    primary = MongoV1::MongoClient.new(*@client.primary)
     authenticate_client(primary)
-    assert_raise Mongo::ConnectionFailure do
+    assert_raise MongoV1::ConnectionFailure do
       perform_step_down(primary)
     end
 
@@ -155,9 +155,9 @@ class ReplicaSetClientTest < Test::Unit::TestCase
   #   end
 
   #   old_primary = [@client.primary_pool.host, @client.primary_pool.port]
-  #   old_primary_conn = Mongo::MongoClient.new(*old_primary)
+  #   old_primary_conn = MongoV1::MongoClient.new(*old_primary)
 
-  #   assert_raise Mongo::ConnectionFailure do
+  #   assert_raise MongoV1::ConnectionFailure do
   #     perform_step_down(old_primary_conn)
   #   end
 
@@ -167,7 +167,7 @@ class ReplicaSetClientTest < Test::Unit::TestCase
   #   end
 
   #   new_primary = [@rs.primary.host, @rs.primary.port]
-  #   new_primary_conn = Mongo::MongoClient.new(*new_primary)
+  #   new_primary_conn = MongoV1::MongoClient.new(*new_primary)
 
   #   assert new_primary != old_primary
 
@@ -184,7 +184,7 @@ class ReplicaSetClientTest < Test::Unit::TestCase
 
   #   begin
   #     new_primary_conn['admin'].command({'replSetReconfig' => config})
-  #   rescue Mongo::ConnectionFailure
+  #   rescue MongoV1::ConnectionFailure
   #   end
 
   #   # Wait for the dust to settle
@@ -205,7 +205,7 @@ class ReplicaSetClientTest < Test::Unit::TestCase
 
   #     begin
   #       new_primary_conn['admin'].command({'replSetReconfig' => config})
-  #     rescue Mongo::ConnectionFailure
+  #     rescue MongoV1::ConnectionFailure
   #     end
   #   end
   # end
@@ -232,19 +232,19 @@ class ReplicaSetClientTest < Test::Unit::TestCase
   end
 
   def test_read_pref_primary_with_tags
-    parser = Mongo::URIParser.new("mongodb://#{@rs.replicas[0].host_port},#{@rs.replicas[1].host_port}" +
+    parser = MongoV1::URIParser.new("mongodb://#{@rs.replicas[0].host_port},#{@rs.replicas[1].host_port}" +
                                     "?replicaset=#{@rs.repl_set_name}&readPreference=primary&" +
                                     "readPreferenceTags=dc:ny,rack:1")
-    assert_raise_error Mongo::MongoArgumentError do
+    assert_raise_error MongoV1::MongoArgumentError do
       parser.connection.read_pool
     end
   end
 
   def test_read_pref_with_tags
-    parser = Mongo::URIParser.new("mongodb://#{@rs.replicas[0].host_port},#{@rs.replicas[1].host_port}" +
+    parser = MongoV1::URIParser.new("mongodb://#{@rs.replicas[0].host_port},#{@rs.replicas[1].host_port}" +
                                     "?replicaset=#{@rs.repl_set_name}&" +
                                     "readPreferenceTags=dc:ny,rack:1")
-    assert_raise_error Mongo::MongoArgumentError do
+    assert_raise_error MongoV1::MongoArgumentError do
       parser.connection.read_pool
     end
   end
@@ -388,6 +388,6 @@ class ReplicaSetClientTest < Test::Unit::TestCase
     assert_equal 50, client.op_timeout
 
     client = MongoReplicaSetClient.new(@rs.repl_set_seeds, :connect => false)
-    assert_equal Mongo::MongoClient::DEFAULT_OP_TIMEOUT, client.op_timeout
+    assert_equal MongoV1::MongoClient::DEFAULT_OP_TIMEOUT, client.op_timeout
   end
 end

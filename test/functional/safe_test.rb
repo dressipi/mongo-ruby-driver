@@ -13,7 +13,7 @@
 # limitations under the License.
 
 require 'test_helper'
-include Mongo
+include MongoV1
 
 class SafeTest < Test::Unit::TestCase
   context "Safe mode propogation: " do
@@ -85,8 +85,8 @@ class SafeTest < Test::Unit::TestCase
       response = @collection.update({:a => 1}, {"$set" => {:a => 2}},
                              :multi => true)
 
-      assert(response['updatedExisting'] || @db.connection.wire_version_feature?(Mongo::MongoClient::BATCH_COMMANDS)) # TODO - review new write command return values
-      assert(response['n'] == 3 || @db.connection.wire_version_feature?(Mongo::MongoClient::BATCH_COMMANDS)) # TODO - update command top pending
+      assert(response['updatedExisting'] || @db.connection.wire_version_feature?(MongoV1::MongoClient::BATCH_COMMANDS)) # TODO - review new write command return values
+      assert(response['n'] == 3 || @db.connection.wire_version_feature?(MongoV1::MongoClient::BATCH_COMMANDS)) # TODO - update command top pending
     end
 
     should "return object on remove" do

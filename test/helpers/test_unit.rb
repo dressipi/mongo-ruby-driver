@@ -21,12 +21,12 @@ unless defined? TEST_PORT
   TEST_PORT = if ENV['MONGO_RUBY_DRIVER_PORT']
     ENV['MONGO_RUBY_DRIVER_PORT'].to_i
   else
-    Mongo::MongoClient::DEFAULT_PORT
+    MongoV1::MongoClient::DEFAULT_PORT
   end
 end
 
 class Test::Unit::TestCase
-  include Mongo
+  include MongoV1
   include BSONV1
 
   # Handles creating a pre-defined MongoDB cluster for integration testing.
@@ -75,7 +75,7 @@ class Test::Unit::TestCase
     retries = 0
     begin
       yield
-    rescue Mongo::ConnectionFailure => ex
+    rescue MongoV1::ConnectionFailure => ex
       retries += 1
       raise ex if retries > max_retries
       sleep(2)
@@ -86,7 +86,7 @@ class Test::Unit::TestCase
   # Creates and connects a standard, pre-defined MongoClient instance.
   #
   # @param  options={} [Hash] Options to be passed to the client instance.
-  # @param  legacy=false [Boolean] When true, uses deprecated Mongo::Connection.
+  # @param  legacy=false [Boolean] When true, uses deprecated MongoV1::Connection.
   #
   # @return [MongoClient] The client instance.
   def self.standard_connection(options={}, legacy=false)
@@ -107,7 +107,7 @@ class Test::Unit::TestCase
   # Creates and connects a standard, pre-defined MongoClient instance.
   #
   # @param  options={} [Hash] Options to be passed to the client instance.
-  # @param  legacy=false [Boolean] When true, uses deprecated Mongo::Connection.
+  # @param  legacy=false [Boolean] When true, uses deprecated MongoV1::Connection.
   #
   # @return [MongoClient] The client instance.
   def standard_connection(options={}, legacy=false)
@@ -151,7 +151,7 @@ class Test::Unit::TestCase
       step_down_command[:replSetStepDown] = 30
       step_down_command[:force] = true
       member['admin'].command(step_down_command)
-    rescue Mongo::OperationFailure => e
+    rescue MongoV1::OperationFailure => e
       retry unless (Time.now - start) > timeout
       raise e
     end
@@ -295,7 +295,7 @@ class Test::Unit::TestCase
   end
 
   def with_write_commands(client, &block)
-    wire_version = Mongo::MongoClient::BATCH_COMMANDS
+    wire_version = MongoV1::MongoClient::BATCH_COMMANDS
     if client.primary_wire_version_feature?(wire_version)
       yield wire_version
     end
@@ -312,7 +312,7 @@ class Test::Unit::TestCase
   end
 
   def with_write_operations(client, &block)
-    wire_version = Mongo::MongoClient::RELEASE_2_4_AND_BEFORE
+    wire_version = MongoV1::MongoClient::RELEASE_2_4_AND_BEFORE
     if client.primary_wire_version_feature?(wire_version)
       client.class.class_eval(%Q{
         alias :old_use_write_command? :use_write_command?
@@ -333,7 +333,7 @@ class Test::Unit::TestCase
   end
 
   def batch_commands?(wire_version)
-    wire_version >= Mongo::MongoClient::BATCH_COMMANDS
+    wire_version >= MongoV1::MongoClient::BATCH_COMMANDS
   end
 
   def subject_to_server_4754?(client)
@@ -365,7 +365,7 @@ class Test::Unit::TestCase
 
       begin
         admin.command(create_role)
-      rescue Mongo::OperationFailure => ex
+      rescue MongoV1::OperationFailure => ex
         # role already exists
       end
 
@@ -389,7 +389,7 @@ class Test::Unit::TestCase
       # unless you're authenticated.
       return true if ex.message.include?("authorized") ||
                       (client.server_version >= "2.7.1" &&
-                      ex.error_code == Mongo::ErrorCode::UNAUTHORIZED)
+                      ex.error_code == MongoV1::ErrorCode::UNAUTHORIZED)
     end
   end
 
@@ -405,11 +405,11 @@ class Test::Unit::TestCase
   def self.ensure_admin_user
     10.times do
       begin
-        client = Mongo::MongoClient.new(TEST_HOST, TEST_PORT)
+        client = MongoV1::MongoClient.new(TEST_HOST, TEST_PORT)
         db = client[TEST_DB]
         begin
           db.authenticate(TEST_USER, TEST_USER_PWD, nil, 'admin')
-        rescue Mongo::AuthenticationError => ex
+        rescue MongoV1::AuthenticationError => ex
           roles = [ 'dbAdminAnyDatabase',
                     'userAdminAnyDatabase',
                     'readWriteAnyDatabase',
@@ -418,7 +418,7 @@ class Test::Unit::TestCase
         end
         TEST_BASE.class_eval { class_variable_set("@@connected_single_mongod", true) }
         break
-      rescue Mongo::ConnectionFailure
+      rescue MongoV1::ConnectionFailure
         # mongod not available yet, wait a second and try again
         sleep(1)
       end
@@ -430,14 +430,14 @@ class Test::Unit::TestCase
     not_cluster = TEST_BASE.class_eval { class_variables }.none? { |v| v =~ /@@cluster_/ }
 
     if @@connected_single_mongod && not_cluster
-      client = Mongo::MongoClient.from_uri(TEST_URI, :op_timeout => TEST_OP_TIMEOUT)
+      client = MongoV1::MongoClient.from_uri(TEST_URI, :op_timeout => TEST_OP_TIMEOUT)
       db = client[TEST_DB]
       begin
         begin
           db.authenticate(TEST_USER, TEST_USER_PWD)
 
-        rescue Mongo::ConnectionFailure, Mongo::MongoArgumentError
-        rescue Mongo::AuthenticationError
+        rescue MongoV1::ConnectionFailure, MongoV1::MongoArgumentError
+        rescue MongoV1::AuthenticationError
           Test::Unit::TestCase.ensure_admin_user
           db.authenticate(TEST_USER, TEST_USER_PWD)
         end
@@ -455,7 +455,7 @@ class Test::Unit::TestCase
           db.command(:dropAllUsersFromDatabase => 1)
         end
 
-      rescue Mongo::ConnectionFailure
+      rescue MongoV1::ConnectionFailure
         # Nothing we can do about the mongod not being available
       end
     end

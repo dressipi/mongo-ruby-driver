@@ -16,7 +16,7 @@
 
 require 'socket'
 require 'fileutils'
-require 'mongo'
+require 'mongov1'
 require 'sfl'
 
 $debug_level = 2
@@ -37,7 +37,7 @@ end
 #     A configuration can be edited, modified, copied into a test file, and supplied to a cluster manager
 #     as a parameter.
 #
-module Mongo
+module MongoV1
   class Config
     DEFAULT_BASE_OPTS = { :host => 'localhost', :dbpath => 'data', :logpath => 'data/log' }
     DEFAULT_REPLICA_SET = DEFAULT_BASE_OPTS.merge( :replicas => 3, :arbiters => 0 )
@@ -332,11 +332,11 @@ module Mongo
         verifies.times do |i|
           #puts "DbServer.verify via connection probe - port:#{@port.inspect} iteration:#{i} @pid:#{@pid.inspect} kill:#{Process.kill(0, @pid).inspect} running?:#{running?.inspect} cmd:#{cmd.inspect}"
           begin
-            raise Mongo::ConnectionFailure unless running?
-            Mongo::MongoClient.new(@host, @port).close
+            raise MongoV1::ConnectionFailure unless running?
+            MongoV1::MongoClient.new(@host, @port).close
             #puts "DbServer.verified via connection - port: #{@port} iteration: #{i}"
             return @pid
-          rescue Mongo::ConnectionFailure
+          rescue MongoV1::ConnectionFailure
             sleep 1
           end
         end
@@ -345,7 +345,7 @@ module Mongo
           start(verifies)
         else
           system "ps -fp #{@pid}; cat #{@config[:logpath]}"
-          raise Mongo::ConnectionFailure, "DbServer.start verify via connection probe failed - port:#{@port.inspect} @pid:#{@pid.inspect} kill:#{Process.kill(0, @pid).inspect} running?:#{running?.inspect} cmd:#{cmd.inspect}"
+          raise MongoV1::ConnectionFailure, "DbServer.start verify via connection probe failed - port:#{@port.inspect} @pid:#{@pid.inspect} kill:#{Process.kill(0, @pid).inspect} running?:#{running?.inspect} cmd:#{cmd.inspect}"
         end
       end
 
@@ -356,7 +356,7 @@ module Mongo
       def initialize(config)
         @config = config
         @servers = {}
-        Mongo::Config::CLUSTER_OPT_KEYS.each do |key|
+        MongoV1::Config::CLUSTER_OPT_KEYS.each do |key|
           @servers[key] = @config[key].collect{|conf| p conf; DbServer.new(conf)} if @config[key]
         end
       end
@@ -368,10 +368,10 @@ module Mongo
       def ensure_authenticated(client)
         begin
           client[TEST_DB].authenticate(TEST_USER, TEST_USER_PWD)
-        rescue Mongo::MongoArgumentError => ex
+        rescue MongoV1::MongoArgumentError => ex
           # client is already authenticated
           raise ex unless ex.message =~ /already authenticated/
-        rescue Mongo::AuthenticationError => ex
+        rescue MongoV1::AuthenticationError => ex
           # 1) The creds are wrong
           # 2) Or the user doesn't exist
           roles = [ 'dbAdminAnyDatabase',
@@ -382,7 +382,7 @@ module Mongo
             # Try to add the user for case (2)
             client[TEST_DB].add_user(TEST_USER, TEST_USER_PWD, nil, :roles => roles)
             client[TEST_DB].authenticate(TEST_USER, TEST_USER_PWD)
-          rescue Mongo::ConnectionFailure, Mongo::OperationFailure => ex
+          rescue MongoV1::ConnectionFailure, MongoV1::OperationFailure => ex
             # Maybe not master, so try to authenticate
             # 2.2 throws an OperationFailure if add_user fails
             begin
@@ -402,13 +402,13 @@ module Mongo
         cmd_servers.each do |cmd_server|
           debug 3, cmd_server.inspect
           cmd_server = cmd_server.config if cmd_server.is_a?(DbServer)
-          client = Mongo::MongoClient.new(cmd_server[:host], cmd_server[:port])
+          client = MongoV1::MongoClient.new(cmd_server[:host], cmd_server[:port])
           ensure_authenticated(client)
           cmd.each do |c|
             debug 3,  "ClusterManager.command c:#{c.inspect}"
             response = client[db_name].command( c, opts )
             debug 3,  "ClusterManager.command response:#{response.inspect}"
-            raise Mongo::OperationFailure, "c:#{c.inspect} opts:#{opts.inspect} failed" unless response["ok"] == 1.0 || opts.fetch(:check_response, true) == false
+            raise MongoV1::OperationFailure, "c:#{c.inspect} opts:#{opts.inspect} failed" unless response["ok"] == 1.0 || opts.fetch(:check_response, true) == false
             ret << response
           end
           client.close
@@ -427,7 +427,7 @@ module Mongo
 
       def repl_set_get_config
         host, port = primary_name.split(":")
-        client = Mongo::MongoClient.new(host, port)
+        client = MongoV1::MongoClient.new(host, port)
         ensure_authenticated(client)
         client['local']['system.replset'].find_one
       end
@@ -488,7 +488,7 @@ module Mongo
           sleep(1)
         end
 
-        raise Mongo::OperationFailure,
+        raise MongoV1::OperationFailure,
           "replSet startup failed - status: #{states.inspect}"
       end
 
@@ -622,7 +622,7 @@ module Mongo
       def addshards(shards = @config[:shards])
         begin
           command( @config[:routers].first, 'admin', Array(shards).collect{|s| { :addshard => "#{s[:host]}:#{s[:port]}" } } )
-        rescue Mongo::OperationFailure => ex
+        rescue MongoV1::OperationFailure => ex
           # Because we cannot run the listshards command under the localhost
           # exception in > 2.7.1, we run the risk of attempting to add the same shard twice.
           # Our tests may add a local db to a shard, if the cluster is still up,
@@ -645,7 +645,7 @@ module Mongo
 
       def mongos_discover # can also do @config[:routers] find but only want mongos for connections
         (@config[:configs]).collect do |cmd_server|
-          client = Mongo::MongoClient.new(cmd_server[:host], cmd_server[:port])
+          client = MongoV1::MongoClient.new(cmd_server[:host], cmd_server[:port])
           result = client['config']['mongos'].find.to_a
           client.close
           result
@@ -675,7 +675,7 @@ module Mongo
         cmd_servers.each do |cmd_server|
           next unless cmd_server
           begin
-            client = Mongo::MongoClient.new(cmd_server.config[:host],
+            client = MongoV1::MongoClient.new(cmd_server.config[:host],
                                             cmd_server.config[:port])
             ensure_authenticated(client)
             db = client[TEST_DB]
@@ -686,7 +686,7 @@ module Mongo
               db.command(:dropAllUsersFromDatabase => 1)
             end
             break
-          rescue Mongo::ConnectionFailure
+          rescue MongoV1::ConnectionFailure
           end
         end
       end

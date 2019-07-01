@@ -21,7 +21,7 @@ class GridIOTest < Test::Unit::TestCase
       @db = standard_connection.db(TEST_DB)
       @files  = @db.collection('fs.files')
       @chunks = @db.collection('fs.chunks')
-      @chunks.create_index([['files_id', Mongo::ASCENDING], ['n', Mongo::ASCENDING]])
+      @chunks.create_index([['files_id', MongoV1::ASCENDING], ['n', MongoV1::ASCENDING]])
     end
 
     teardown do

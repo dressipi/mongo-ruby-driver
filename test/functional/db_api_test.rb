@@ -15,7 +15,7 @@
 require 'test_helper'
 
 class DBAPITest < Test::Unit::TestCase
-  include Mongo
+  include MongoV1
   include BSON
 
   def setup
@@ -358,7 +358,7 @@ class DBAPITest < Test::Unit::TestCase
     @db.create_collection('foobar')
 
     coll = @db.create_collection('foobar')
-    assert_equal true, Mongo::WriteConcern.gle?(coll.write_concern)
+    assert_equal true, MongoV1::WriteConcern.gle?(coll.write_concern)
   end
 
 
@@ -515,7 +515,7 @@ HERE
       @db.collection('does-not-exist')
       fail "expected exception"
     rescue => ex
-      assert_equal Mongo::MongoDBError, ex.class
+      assert_equal MongoV1::MongoDBError, ex.class
       assert_equal "Collection 'does-not-exist' doesn't exist. (strict=true)", ex.to_s
     ensure
       @db.strict = false
@@ -534,7 +534,7 @@ HERE
     end
 
     # Now the collection exists. This time we should see an exception.
-    assert_raise Mongo::MongoDBError do
+    assert_raise MongoV1::MongoDBError do
       @db.create_collection('foobar')
     end
     @db.strict = false
@@ -743,19 +743,19 @@ HERE
     assert_raise TypeError do
       @db.collection(5)
     end
-    assert_raise Mongo::InvalidNSName do
+    assert_raise MongoV1::InvalidNSName do
       @db.collection("")
     end
-    assert_raise Mongo::InvalidNSName do
+    assert_raise MongoV1::InvalidNSName do
       @db.collection("te$t")
     end
-    assert_raise Mongo::InvalidNSName do
+    assert_raise MongoV1::InvalidNSName do
       @db.collection(".test")
     end
-    assert_raise Mongo::InvalidNSName do
+    assert_raise MongoV1::InvalidNSName do
       @db.collection("test.")
     end
-    assert_raise Mongo::InvalidNSName do
+    assert_raise MongoV1::InvalidNSName do
       @db.collection("tes..t")
     end
   end
@@ -769,19 +769,19 @@ HERE
     assert_raise TypeError do
       a.rename(5)
     end
-    assert_raise Mongo::InvalidNSName do
+    assert_raise MongoV1::InvalidNSName do
       a.rename("")
     end
-    assert_raise Mongo::InvalidNSName do
+    assert_raise MongoV1::InvalidNSName do
       a.rename("te$t")
     end
-    assert_raise Mongo::InvalidNSName do
+    assert_raise MongoV1::InvalidNSName do
       a.rename(".test")
     end
-    assert_raise Mongo::InvalidNSName do
+    assert_raise MongoV1::InvalidNSName do
       a.rename("test.")
     end
-    assert_raise Mongo::InvalidNSName do
+    assert_raise MongoV1::InvalidNSName do
       a.rename("tes..t")
     end
 

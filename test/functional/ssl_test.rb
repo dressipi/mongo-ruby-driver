@@ -16,7 +16,7 @@ require 'test_helper'
 require 'shared/ssl_shared'
 
 class SSLTest < Test::Unit::TestCase
-  include Mongo
+  include MongoV1
   include SSLTests
 
   def setup

@@ -22,7 +22,7 @@ class CollectionTest < Test::Unit::TestCase
   LIMITED_MAX_MESSAGE_SIZE = 3 * LIMITED_MAX_BSON_SIZE
   LIMITED_TEST_HEADROOM = 50
   LIMITED_VALID_VALUE_SIZE = LIMITED_MAX_BSON_SIZE - LIMITED_TEST_HEADROOM
-  LIMITED_INVALID_VALUE_SIZE = LIMITED_MAX_BSON_SIZE + Mongo::MongoClient::COMMAND_HEADROOM + 1
+  LIMITED_INVALID_VALUE_SIZE = LIMITED_MAX_BSON_SIZE + MongoV1::MongoClient::COMMAND_HEADROOM + 1
 
   def setup
     @client       ||= standard_connection(:op_timeout => 10)
@@ -33,10 +33,10 @@ class CollectionTest < Test::Unit::TestCase
     @ismaster     = @client['admin'].command(:isMaster => 1)
   end
 
-  @@wv0 = Mongo::MongoClient::RELEASE_2_4_AND_BEFORE
-  @@wv2 = Mongo::MongoClient::BATCH_COMMANDS
-  @@a_h = Mongo::MongoClient::APPEND_HEADROOM
-  @@s_h = Mongo::MongoClient::SERIALIZE_HEADROOM
+  @@wv0 = MongoV1::MongoClient::RELEASE_2_4_AND_BEFORE
+  @@wv2 = MongoV1::MongoClient::BATCH_COMMANDS
+  @@a_h = MongoV1::MongoClient::APPEND_HEADROOM
+  @@s_h = MongoV1::MongoClient::SERIALIZE_HEADROOM
 
   def max_size_exception_test(client)
     base = [
@@ -55,14 +55,14 @@ class CollectionTest < Test::Unit::TestCase
   end
 
   def max_size_exception_jruby_test(client)
-    [@@wv0, client.max_bson_size + 1, Mongo::OperationFailure, /object to insert too large/]
+    [@@wv0, client.max_bson_size + 1, MongoV1::OperationFailure, /object to insert too large/]
   end
 
   def max_size_exception_commands_test(client)
     [
       #[@@wv2, client.max_bson_size,         nil,                     /xyzzy/], # succeeds standalone, fails whole suite
-      [@@wv2, client.max_bson_size + 1,     Mongo::OperationFailure, /object to insert too large/],
-      [@@wv2, client.max_bson_size + @@s_h, Mongo::OperationFailure, /object to insert too large/],
+      [@@wv2, client.max_bson_size + 1,     MongoV1::OperationFailure, /object to insert too large/],
+      [@@wv2, client.max_bson_size + @@s_h, MongoV1::OperationFailure, /object to insert too large/],
       [@@wv2, client.max_bson_size + @@a_h, BSONV1::InvalidDocument,   /Document.* too large/]
     ]
   end
@@ -179,7 +179,7 @@ class CollectionTest < Test::Unit::TestCase
                                 :writeConcern, { :w => 1 },
                                 :ordered, false]
 
-    assert_raise Mongo::OperationFailure do
+    assert_raise MongoV1::OperationFailure do
       @db.command(command)
     end
   end
@@ -249,7 +249,7 @@ class CollectionTest < Test::Unit::TestCase
                                 :writeConcern, { :w => 1 },
                                 :ordered, false]
 
-    assert_raise Mongo::OperationFailure do
+    assert_raise MongoV1::OperationFailure do
       @db.command(command)
     end
   end
@@ -340,14 +340,14 @@ class CollectionTest < Test::Unit::TestCase
                                           ],
                                 :ordered, false]
 
-    assert_raise Mongo::OperationFailure do
+    assert_raise MongoV1::OperationFailure do
       @db.command(command)
     end
   end
 
   def test_error_code
     coll = @db['test-error-code']
-    coll.ensure_index(BSONV1::OrderedHash[:x, Mongo::ASCENDING], { :unique => true })
+    coll.ensure_index(BSONV1::OrderedHash[:x, MongoV1::ASCENDING], { :unique => true })
     coll.save(:x => 2)
     begin
       coll.save(:x => 2)
@@ -369,7 +369,7 @@ class CollectionTest < Test::Unit::TestCase
           :cursor => {}
       )
 
-      assert_equal Mongo::Cursor, cursor.class
+      assert_equal MongoV1::Cursor, cursor.class
 
       cursor_sum = cursor.reduce(0) do |sum, doc|
         sum += doc['_id']
@@ -394,13 +394,13 @@ class CollectionTest < Test::Unit::TestCase
   def test_aggregation_cursor_invalid_ops
     return unless @version >= '2.5.1'
     cursor = @test.aggregate([], :cursor => {})
-    assert_raise(Mongo::InvalidOperation) { cursor.rewind! }
-    assert_raise(Mongo::InvalidOperation) { cursor.explain }
-    assert_raise(Mongo::InvalidOperation) { cursor.count }
+    assert_raise(MongoV1::InvalidOperation) { cursor.rewind! }
+    assert_raise(MongoV1::InvalidOperation) { cursor.explain }
+    assert_raise(MongoV1::InvalidOperation) { cursor.count }
   end
 
   def test_aggregation_invalid_read_pref
-    assert_raise Mongo::MongoArgumentError do
+    assert_raise MongoV1::MongoArgumentError do
       @test.aggregate([], :read => :invalid_read_pref)
     end
   end
@@ -464,11 +464,11 @@ class CollectionTest < Test::Unit::TestCase
   end
 
   def test_valid_names
-    assert_raise Mongo::InvalidNSName do
+    assert_raise MongoV1::InvalidNSName do
       @db["te$t"]
     end
 
-    assert_raise Mongo::InvalidNSName do
+    assert_raise MongoV1::InvalidNSName do
       @db['$main']
     end
 
@@ -886,7 +886,7 @@ class CollectionTest < Test::Unit::TestCase
   def test_jnote_raises_exception
     return unless @version < "2.5.3"
     with_no_journaling(@client) do
-      ex = assert_raise Mongo::WriteConcernError do
+      ex = assert_raise MongoV1::WriteConcernError do
         @test.insert({:foo => 1}, :j => true)
       end
       result = ex.result
@@ -896,7 +896,7 @@ class CollectionTest < Test::Unit::TestCase
 
   def test_wnote_raises_exception_with_err_not_nil
     return unless @version < "2.5.3"
-    ex = assert_raise Mongo::WriteConcernError do
+    ex = assert_raise MongoV1::WriteConcernError do
       @test.insert({:foo => 1}, :w => 2)
     end
     result = ex.result
@@ -1030,7 +1030,7 @@ class CollectionTest < Test::Unit::TestCase
     @test.save(:i => 2)
     assert_equal 2, @test.count
 
-    @test.ensure_index(BSONV1::OrderedHash[:i, Mongo::ASCENDING])
+    @test.ensure_index(BSONV1::OrderedHash[:i, MongoV1::ASCENDING])
 
     # Check that a named_hint can be specified
     assert_equal 1, @test.count(:query => { :i => 1 }, :named_hint => '_id_')
@@ -1038,7 +1038,7 @@ class CollectionTest < Test::Unit::TestCase
 
     # Verify that the hint is being sent to the server by providing a bad hint
     if @version > '2.6'
-      assert_raise Mongo::OperationFailure do
+      assert_raise MongoV1::OperationFailure do
         @test.count(:query => { :i => 1 }, :hint => 'bad_hint')
       end
     else
@@ -1047,14 +1047,14 @@ class CollectionTest < Test::Unit::TestCase
 
     # Verify that the named_hint is being sent to the server by providing a bad hint
     if @version > '2.6'
-      assert_raise Mongo::OperationFailure do
+      assert_raise MongoV1::OperationFailure do
         @test.count(:query => { :i => 1 }, :named_hint => 'bad_hint')
       end
     else
       assert_equal 1, @test.count(:query => { :i => 1 }, :named_hint => 'bad_hint')
     end
 
-    @test.ensure_index(BSONV1::OrderedHash[:x, Mongo::ASCENDING], :sparse => true)
+    @test.ensure_index(BSONV1::OrderedHash[:x, MongoV1::ASCENDING], :sparse => true)
 
     # The sparse index won't have any entries.
     # Check that count returns 0 when using the hint.
@@ -1127,7 +1127,7 @@ class CollectionTest < Test::Unit::TestCase
     assert doc['b']
 
 
-    assert_raise Mongo::OperationFailure do
+    assert_raise MongoV1::OperationFailure do
       @test.find_one({:a => 1}, :fields => {:a => 1, :b => 0})
     end
   end
@@ -1314,7 +1314,7 @@ class CollectionTest < Test::Unit::TestCase
 
   def test_aggregate_pipeline_operator_format
     return unless @version > '2.1.1'
-    assert_raise Mongo::OperationFailure do
+    assert_raise MongoV1::OperationFailure do
       @test.aggregate([{"$project" => "_id"}])
     end
   end
@@ -1501,7 +1501,7 @@ class CollectionTest < Test::Unit::TestCase
     output_collection = "test-map-coll"
     m = Code.new("function() { emit(this.user_id, 1); }")
     r = Code.new("function(k,vals) { return 1; }")
-    Mongo::ReadPreference.expects(:warn).with(regexp_matches(/rerouted to primary/))
+    MongoV1::ReadPreference.expects(:warn).with(regexp_matches(/rerouted to primary/))
     res = @test.map_reduce(m, r, :raw => true, :out => output_collection, :read => :secondary)
   end
 
@@ -1598,7 +1598,7 @@ class CollectionTest < Test::Unit::TestCase
     @test << { :a => 2, :processed => false }
     @test << { :a => 3, :processed => false }
 
-    assert_raise Mongo::OperationFailure do
+    assert_raise MongoV1::OperationFailure do
       @test.find_and_modify(:blimey => {})
     end
   end
@@ -1775,11 +1775,11 @@ class CollectionTest < Test::Unit::TestCase
     @test.insert("x" => "hello world")
     assert_equal 1, @test.index_information.keys.count #default index
 
-    @test.ensure_index([["x", Mongo::DESCENDING]], {})
+    @test.ensure_index([["x", MongoV1::DESCENDING]], {})
     assert_equal 2, @test.index_information.keys.count
     assert @test.index_information.keys.include?("x_-1")
 
-    @test.ensure_index([["x", Mongo::ASCENDING]])
+    @test.ensure_index([["x", MongoV1::ASCENDING]])
     assert @test.index_information.keys.include?("x_1")
 
     @test.ensure_index([["type", 1], ["date", -1]])
@@ -1790,7 +1790,7 @@ class CollectionTest < Test::Unit::TestCase
     @test.drop_index("x_-1")
     assert_equal 2, @test.index_information.keys.count
 
-    @test.ensure_index([["x", Mongo::DESCENDING]], {})
+    @test.ensure_index([["x", MongoV1::DESCENDING]], {})
     assert_equal 3, @test.index_information.keys.count
     assert @test.index_information.keys.include?("x_-1")
 
@@ -1959,30 +1959,30 @@ class CollectionTest < Test::Unit::TestCase
     end
 
     should "drop an index" do
-      @collection.create_index([['a', Mongo::ASCENDING]])
+      @collection.create_index([['a', MongoV1::ASCENDING]])
       assert @collection.index_information['a_1']
-      @collection.drop_index([['a', Mongo::ASCENDING]])
+      @collection.drop_index([['a', MongoV1::ASCENDING]])
       assert_nil @collection.index_information['a_1']
     end
 
     should "drop an index which was given a specific name" do
-      @collection.create_index([['a', Mongo::DESCENDING]], {:name => 'i_will_not_fear'})
+      @collection.create_index([['a', MongoV1::DESCENDING]], {:name => 'i_will_not_fear'})
       assert @collection.index_information['i_will_not_fear']
-      @collection.drop_index([['a', Mongo::DESCENDING]])
+      @collection.drop_index([['a', MongoV1::DESCENDING]])
       assert_nil @collection.index_information['i_will_not_fear']
     end
 
     should "drops an composite index" do
-      @collection.create_index([['a', Mongo::DESCENDING], ['b', Mongo::ASCENDING]])
+      @collection.create_index([['a', MongoV1::DESCENDING], ['b', MongoV1::ASCENDING]])
       assert @collection.index_information['a_-1_b_1']
-      @collection.drop_index([['a', Mongo::DESCENDING], ['b', Mongo::ASCENDING]])
+      @collection.drop_index([['a', MongoV1::DESCENDING], ['b', MongoV1::ASCENDING]])
       assert_nil @collection.index_information['a_-1_b_1']
     end
 
     should "drops an index with symbols" do
-      @collection.create_index([['a', Mongo::DESCENDING], [:b, Mongo::ASCENDING]])
+      @collection.create_index([['a', MongoV1::DESCENDING], [:b, MongoV1::ASCENDING]])
       assert @collection.index_information['a_-1_b_1']
-      @collection.drop_index([['a', Mongo::DESCENDING], [:b, Mongo::ASCENDING]])
+      @collection.drop_index([['a', MongoV1::DESCENDING], [:b, MongoV1::ASCENDING]])
       assert_nil @collection.index_information['a_-1_b_1']
     end
   end
@@ -2008,36 +2008,36 @@ class CollectionTest < Test::Unit::TestCase
 
     #should "create a text index" do
     #  @geo.save({'title' => "some text"})
-    #  @geo.create_index([['title', Mongo::TEXT]])
+    #  @geo.create_index([['title', MongoV1::TEXT]])
     #  assert @geo.index_information['title_text']
     #end
 
     should "create a hashed index" do
       @geo.save({'a' => 1})
-      @geo.create_index([['a', Mongo::HASHED]])
+      @geo.create_index([['a', MongoV1::HASHED]])
       assert @geo.index_information['a_hashed']
     end
 
     should "create a geospatial index" do
       @geo.save({'loc' => [-100, 100]})
-      @geo.create_index([['loc', Mongo::GEO2D]])
+      @geo.create_index([['loc', MongoV1::GEO2D]])
       assert @geo.index_information['loc_2d']
     end
 
     should "create a geoHaystack index" do
       @geo.save({ "_id" => 100, "pos" => { "long" => 126.9, "lat" => 35.2 }, "type" => "restaurant"})
-      @geo.create_index([['pos', Mongo::GEOHAYSTACK], ['type', Mongo::ASCENDING]], :bucket_size => 1)
+      @geo.create_index([['pos', MongoV1::GEOHAYSTACK], ['type', MongoV1::ASCENDING]], :bucket_size => 1)
       assert @geo.index_information['pos_geoHaystack_type_1']
     end
 
     should "create a geo 2dsphere index" do
       @collection.insert({"coordinates" => [ 5 , 5 ], "type" => "Point"})
-      @geo.create_index([['coordinates', Mongo::GEO2DSPHERE]])
+      @geo.create_index([['coordinates', MongoV1::GEO2DSPHERE]])
       assert @geo.index_information['coordinates_2dsphere']
     end
 
     should "create a unique index" do
-      @collection.create_index([['a', Mongo::ASCENDING]], :unique => true)
+      @collection.create_index([['a', MongoV1::ASCENDING]], :unique => true)
       assert @collection.index_information['a_1']['unique'] == true
     end
 
@@ -2046,7 +2046,7 @@ class CollectionTest < Test::Unit::TestCase
         @collection.insert({:a => 1})
         @collection.insert({:a => 1})
         assert_equal 2, @collection.find({:a => 1}).count
-        @collection.create_index([['a', Mongo::ASCENDING]], :unique => true, :dropDups => true)
+        @collection.create_index([['a', MongoV1::ASCENDING]], :unique => true, :dropDups => true)
         assert_equal 1, @collection.find({:a => 1}).count
       end
     end
@@ -2056,7 +2056,7 @@ class CollectionTest < Test::Unit::TestCase
         @collection.insert({:a => 1})
         @collection.insert({:a => 1})
         assert_equal 2, @collection.find({:a => 1}).count
-        @collection.create_index([['a', Mongo::ASCENDING]], :unique => true, :drop_dups => true)
+        @collection.create_index([['a', MongoV1::ASCENDING]], :unique => true, :drop_dups => true)
         assert_equal 1, @collection.find({:a => 1}).count
       end
     end
@@ -2066,14 +2066,14 @@ class CollectionTest < Test::Unit::TestCase
         @collection.insert({:a => 1})
         @collection.insert({:a => 1})
         assert_equal 2, @collection.find({:a => 1}).count
-        @collection.ensure_index([['a', Mongo::ASCENDING]], :unique => true, :drop_dups => true)
+        @collection.ensure_index([['a', MongoV1::ASCENDING]], :unique => true, :drop_dups => true)
         assert_equal 1, @collection.find({:a => 1}).count
       end
     end
 
     should "create an index in the background" do
       if @version > '1.3.1'
-        @collection.create_index([['b', Mongo::ASCENDING]], :background => true)
+        @collection.create_index([['b', MongoV1::ASCENDING]], :background => true)
         assert @collection.index_information['b_1']['background'] == true
       else
         assert true
@@ -2082,7 +2082,7 @@ class CollectionTest < Test::Unit::TestCase
 
     should "require an array of arrays" do
       assert_raise MongoArgumentError do
-        @collection.create_index(['c', Mongo::ASCENDING])
+        @collection.create_index(['c', MongoV1::ASCENDING])
       end
     end
 
@@ -2093,7 +2093,7 @@ class CollectionTest < Test::Unit::TestCase
     end
 
     should "raise an error if index name is greater than 128" do
-      assert_raise Mongo::OperationFailure do
+      assert_raise MongoV1::OperationFailure do
         @collection.create_index([['a' * 25, 1], ['b' * 25, 1],
                                   ['c' * 25, 1], ['d' * 25, 1], ['e' * 25, 1]])
       end

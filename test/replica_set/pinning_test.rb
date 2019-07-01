@@ -67,7 +67,7 @@ class ReplicaSetPinningTest < Test::Unit::TestCase
           :cursor => { :batchSize => 1 }
       )
 
-      assert_equal Mongo::Cursor, cursor.class
+      assert_equal MongoV1::Cursor, cursor.class
 
       cursor_sum = cursor.reduce(0) do |sum, doc|
         sum += doc['_id']

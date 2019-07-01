@@ -125,7 +125,7 @@ class ReadPreferenceUnitTest < Test::Unit::TestCase
     read_pref = client.read_preference.merge(:mode    => :primary,
                                              :tags    => [read_pref_tags],
                                              :latency => 6)
-    assert_raise Mongo::MongoArgumentError do
+    assert_raise MongoV1::MongoArgumentError do
       client.select_pool(read_pref)
     end
   end

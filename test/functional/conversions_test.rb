@@ -15,7 +15,7 @@
 require 'test_helper'
 
 class ConversionsTest < Test::Unit::TestCase
-  include Mongo::Conversions
+  include MongoV1::Conversions
 
   def test_array_as_sort_parameters_with_array_of_key_and_value
     params = array_as_sort_parameters(["field1", "asc"])
@@ -155,7 +155,7 @@ class ConversionsTest < Test::Unit::TestCase
   end
 
   def test_sort_value_when_value_is_invalid
-    assert_raise Mongo::InvalidSortValueError do
+    assert_raise MongoV1::InvalidSortValueError do
       sort_value(2)
     end
   end

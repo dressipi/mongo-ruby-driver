@@ -45,9 +45,9 @@ module GSSAPITests
      ENV.key?('MONGODB_GSSAPI_REALM') && ENV.key?('MONGODB_GSSAPI_KDC') &&
      ENV.key?('MONGODB_GSSAPI_DB')
     def test_gssapi_authenticate
-      client = Mongo::MongoClient.new(MONGODB_GSSAPI_HOST, MONGODB_GSSAPI_PORT)
+      client = MongoV1::MongoClient.new(MONGODB_GSSAPI_HOST, MONGODB_GSSAPI_PORT)
       if client['admin'].command(:isMaster => 1)['setName']
-        client = Mongo::MongoReplicaSetClient.new(["#{MONGODB_GSSAPI_HOST}:#{MONGODB_GSSAPI_PORT}"])
+        client = MongoV1::MongoReplicaSetClient.new(["#{MONGODB_GSSAPI_HOST}:#{MONGODB_GSSAPI_PORT}"])
       end
 
       set_system_properties
@@ -76,13 +76,13 @@ module GSSAPITests
 
     def test_wrong_service_name_fails
       extra_opts = { :service_name => 'example' }
-      client = Mongo::MongoClient.new(MONGODB_GSSAPI_HOST, MONGODB_GSSAPI_PORT)
+      client = MongoV1::MongoClient.new(MONGODB_GSSAPI_HOST, MONGODB_GSSAPI_PORT)
       if client['admin'].command(:isMaster => 1)['setName']
-        client = Mongo::MongoReplicaSetClient.new(["#{MONGODB_GSSAPI_HOST}:#{MONGODB_GSSAPI_PORT}"])
+        client = MongoV1::MongoReplicaSetClient.new(["#{MONGODB_GSSAPI_HOST}:#{MONGODB_GSSAPI_PORT}"])
       end
 
       set_system_properties
-      assert_raise_error Mongo::AuthenticationError do
+      assert_raise_error MongoV1::AuthenticationError do
         client[MONGODB_GSSAPI_DB].authenticate(MONGODB_GSSAPI_USER, nil, nil, nil, 'GSSAPI', extra_opts)
       end
     end
@@ -95,7 +95,7 @@ module GSSAPITests
       uri = "mongodb://#{username}@#{ENV['MONGODB_GSSAPI_HOST']}:#{ENV['MONGODB_GSSAPI_PORT']}/?" +
          "authMechanism=GSSAPI&authMechanismProperties=SERVICE_NAME:example"
       client = @client.class.from_uri(uri)
-      assert_raise_error Mongo::AuthenticationError do
+      assert_raise_error MongoV1::AuthenticationError do
         client[MONGODB_GSSAPI_DB].command(:dbstats => 1)
       end
     end
@@ -103,10 +103,10 @@ module GSSAPITests
     def test_extra_opts
       extra_opts = { :service_name => 'example', :canonicalize_host_name => true, 
                      :service_realm => 'dumdum' }
-      client = Mongo::MongoClient.new(TEST_HOST, MONGODB_GSSAPI_PORT)
+      client = MongoV1::MongoClient.new(TEST_HOST, MONGODB_GSSAPI_PORT)
       set_system_properties
 
-      Mongo::Sasl::GSSAPI.expects(:authenticate).with do |username, client, socket, opts|
+      MongoV1::Sasl::GSSAPI.expects(:authenticate).with do |username, client, socket, opts|
         assert_equal opts[:service_name], extra_opts[:service_name]
         assert_equal opts[:canonicalize_host_name], extra_opts[:canonicalize_host_name]
         assert_equal opts[:service_realm], extra_opts[:service_realm]
@@ -120,7 +120,7 @@ module GSSAPITests
                      :service_realm => 'dumdum' }
       set_system_properties
 
-      Mongo::Sasl::GSSAPI.expects(:authenticate).with do |username, client, socket, opts|
+      MongoV1::Sasl::GSSAPI.expects(:authenticate).with do |username, client, socket, opts|
         assert_equal opts[:service_name], extra_opts[:service_name]
         assert_equal opts[:canonicalize_host_name], extra_opts[:canonicalize_host_name]
         assert_equal opts[:service_realm], extra_opts[:service_realm]
@@ -145,7 +145,7 @@ module GSSAPITests
       def test_canonicalize_host_name
         extra_opts = { :canonicalize_host_name => true }
         set_system_properties
-        client = Mongo::MongoClient.new(ENV['MONGODB_GSSAPI_HOST_IP'], MONGODB_GSSAPI_PORT)
+        client = MongoV1::MongoClient.new(ENV['MONGODB_GSSAPI_HOST_IP'], MONGODB_GSSAPI_PORT)
 
         db = client[MONGODB_GSSAPI_DB]
         db.authenticate(MONGODB_GSSAPI_USER, nil, nil, nil, 'GSSAPI', extra_opts)
@@ -155,9 +155,9 @@ module GSSAPITests
 
     def test_invalid_extra_options
       extra_opts = { :invalid => true, :option => true }
-      client = Mongo::MongoClient.new(MONGODB_GSSAPI_HOST)
+      client = MongoV1::MongoClient.new(MONGODB_GSSAPI_HOST)
 
-      assert_raise Mongo::MongoArgumentError do
+      assert_raise MongoV1::MongoArgumentError do
         client[MONGODB_GSSAPI_DB].authenticate(MONGODB_GSSAPI_USER, nil, nil, nil, 'GSSAPI', extra_opts)
       end
     end

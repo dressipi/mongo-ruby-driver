@@ -157,7 +157,7 @@ VALUE c_GSSAPI_authenticator;
 
 void Init_csasl() {
   VALUE mongo, sasl;
-  mongo = rb_const_get(rb_cObject, rb_intern("Mongo"));
+  mongo = rb_const_get(rb_cObject, rb_intern("MongoV1"));
   sasl = rb_const_get(mongo, rb_intern("Sasl"));
   c_GSSAPI_authenticator = rb_define_class_under(sasl, "GSSAPIAuthenticator", rb_cObject);
   rb_define_method(c_GSSAPI_authenticator, "initialize", a_init, 4);

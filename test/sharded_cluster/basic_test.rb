@@ -13,7 +13,7 @@
 # limitations under the License.
 
 require 'test_helper'
-include Mongo
+include MongoV1
 
 class Cursor
   public :construct_query_spec
@@ -125,7 +125,7 @@ class ShardedClusterBasicTest < Test::Unit::TestCase
     @client = sharded_connection
     assert @client.connected?
     @sc.servers(:routers).each{|router| router.stop}
-    assert_raises Mongo::ConnectionFailure do
+    assert_raises MongoV1::ConnectionFailure do
       probe(@seeds.size)
     end
     assert_false @client.connected?
@@ -145,7 +145,7 @@ class ShardedClusterBasicTest < Test::Unit::TestCase
       routers.delete(router)
       router.stop
     end
-    assert_raises Mongo::ConnectionFailure do
+    assert_raises MongoV1::ConnectionFailure do
       probe(@seeds.size)
     end
     assert_false @client.connected?
@@ -163,8 +163,8 @@ class ShardedClusterBasicTest < Test::Unit::TestCase
 
   def test_wire_version_not_in_range
     [
-      [Mongo::MongoClient::MAX_WIRE_VERSION+1, Mongo::MongoClient::MAX_WIRE_VERSION+1],
-      [Mongo::MongoClient::MIN_WIRE_VERSION-1, Mongo::MongoClient::MIN_WIRE_VERSION-1]
+      [MongoV1::MongoClient::MAX_WIRE_VERSION+1, MongoV1::MongoClient::MAX_WIRE_VERSION+1],
+      [MongoV1::MongoClient::MIN_WIRE_VERSION-1, MongoV1::MongoClient::MIN_WIRE_VERSION-1]
     ].each do |min_wire_version_value, max_wire_version_value|
       Mongo.module_eval <<-EVAL
         class ShardingPoolManager
@@ -178,7 +178,7 @@ class ShardedClusterBasicTest < Test::Unit::TestCase
       EVAL
       @client = MongoShardedClient.new(@seeds, :connect => false)
       assert !@client.connected?
-      assert_raises Mongo::ConnectionFailure do
+      assert_raises MongoV1::ConnectionFailure do
         @client.connect
       end
     end

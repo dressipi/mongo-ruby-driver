@@ -15,7 +15,7 @@
 require 'test_helper'
 
 class PoolTest < Test::Unit::TestCase
-  include Mongo
+  include MongoV1
 
   def setup
     @client    ||= standard_connection({:pool_size => 15, :pool_timeout => 5})

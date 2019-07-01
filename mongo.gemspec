@@ -1,5 +1,5 @@
 Gem::Specification.new do |s|
-  s.name              = 'mongo'
+  s.name              = 'mongov1'
 
   s.version           = File.read(File.join(File.dirname(__FILE__), 'VERSION'))
   s.platform          = Gem::Platform::RUBY
@@ -20,12 +20,12 @@ Gem::Specification.new do |s|
 
   s.files             = ['mongo.gemspec', 'LICENSE', 'VERSION']
   s.files             += ['README.md', 'Rakefile', 'bin/mongo_console']
-  s.files             += ['lib/mongo.rb'] + Dir['lib/mongo/**/*.rb']
+  s.files             += ['lib/mongov1.rb'] + Dir['lib/mongov1/**/*.rb']
 
   s.test_files        = Dir['test/**/*.rb'] - Dir['test/bson/*']
   s.executables       = ['mongo_console']
   s.require_paths     = ['lib']
   s.has_rdoc          = 'yard'
 
-  s.add_dependency('bson', "#{s.version}")
+  s.add_dependency('bsonv1', "#{s.version}")
 end

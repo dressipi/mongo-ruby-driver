@@ -16,7 +16,7 @@ require 'test_helper'
 
 class MaxValuesTest < Test::Unit::TestCase
 
-  include Mongo
+  include MongoV1
 
   def setup
     ensure_cluster(:rs)
@@ -107,7 +107,7 @@ class MaxValuesTest < Test::Unit::TestCase
   end
 
   def test_wire_version_not_in_range
-    min_wire_version, max_wire_version = [Mongo::MongoClient::MIN_WIRE_VERSION-1, Mongo::MongoClient::MIN_WIRE_VERSION-1]
+    min_wire_version, max_wire_version = [MongoV1::MongoClient::MIN_WIRE_VERSION-1, MongoV1::MongoClient::MIN_WIRE_VERSION-1]
     #ismaster is called three times on the first node
     @db.stubs(:command).returns(
       @ismaster.merge({'ismaster' => true, 'maxWireVersion' => max_wire_version, 'minWireVersion' => min_wire_version}),
@@ -117,7 +117,7 @@ class MaxValuesTest < Test::Unit::TestCase
       @ismaster.merge({'secondary' => true, 'maxWireVersion' => max_wire_version, 'minWireVersion' => min_wire_version})
     )
     @client.local_manager.stubs(:refresh_required?).returns(true)
-    assert_raises Mongo::ConnectionFailure do
+    assert_raises MongoV1::ConnectionFailure do
       @client.refresh
     end
   end
@@ -137,7 +137,7 @@ class MaxValuesTest < Test::Unit::TestCase
   end
 
   def test_max_write_batch_size
-    assert_equal Mongo::MongoClient::DEFAULT_MAX_WRITE_BATCH_SIZE, @client.max_write_batch_size
+    assert_equal MongoV1::MongoClient::DEFAULT_MAX_WRITE_BATCH_SIZE, @client.max_write_batch_size
     @client.local_manager.primary_pool.node.stubs(:max_write_batch_size).returns(999)
     assert_equal 999, @client.max_write_batch_size
   end
@@ -145,7 +145,7 @@ class MaxValuesTest < Test::Unit::TestCase
   def test_max_write_batch_size_no_manager
     # Simulate no local manager being set yet - RUBY-759
     @client.stubs(:local_manager).returns(nil)
-    assert_equal Mongo::MongoClient::DEFAULT_MAX_WRITE_BATCH_SIZE, @client.max_write_batch_size
+    assert_equal MongoV1::MongoClient::DEFAULT_MAX_WRITE_BATCH_SIZE, @client.max_write_batch_size
   end
 end
 

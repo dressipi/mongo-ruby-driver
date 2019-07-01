@@ -26,7 +26,7 @@ end
 
 class DBTest < Test::Unit::TestCase
 
-  include Mongo
+  include MongoV1
 
   def setup
     @client  = standard_connection
@@ -152,7 +152,7 @@ class DBTest < Test::Unit::TestCase
     end
 
     result = @db.command({:non_command => 1}, :check_response => false)
-    assert !Mongo::Support.ok?(result)
+    assert !MongoV1::Support.ok?(result)
   end
 
   def test_error

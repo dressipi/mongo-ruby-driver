@@ -31,7 +31,7 @@ module SASLPlainTests
   if ENV.key?('MONGODB_SASL_HOST') && ENV.key?('MONGODB_SASL_USER') && ENV.key?('MONGODB_SASL_PASS')
 
     def test_plain_authenticate
-      replica_set = @client.class.name == 'Mongo::MongoReplicaSetClient'
+      replica_set = @client.class.name == 'MongoV1::MongoReplicaSetClient'
 
       # TODO: Remove this once we have a replica set configured for SASL in CI
       return if ENV.key?('CI') && replica_set
@@ -46,13 +46,13 @@ module SASLPlainTests
       assert client[source].logout
 
       # should raise on missing password
-      ex = assert_raise Mongo::MongoArgumentError do
+      ex = assert_raise MongoV1::MongoArgumentError do
         db.authenticate(ENV['MONGODB_SASL_USER'], nil, true, source, 'PLAIN')
       end
       assert_match /username and password are required/, ex.message
 
       # should raise on invalid password
-      assert_raise Mongo::AuthenticationError do
+      assert_raise MongoV1::AuthenticationError do
         db.authenticate(ENV['MONGODB_SASL_USER'], 'foo', true, source, 'PLAIN')
       end
     end
@@ -76,7 +76,7 @@ module SASLPlainTests
             "some_db?authSource=#{source}&authMechanism=PLAIN"
 
       # should raise for missing password
-      ex = assert_raise Mongo::MongoArgumentError do
+      ex = assert_raise MongoV1::MongoArgumentError do
         client = @client.class.from_uri(uri)
       end
       assert_match /username and password are required/, ex.message
@@ -86,7 +86,7 @@ module SASLPlainTests
 
       # should raise for invalid password
       client = @client.class.from_uri(uri)
-      assert_raise Mongo::AuthenticationError do
+      assert_raise MongoV1::AuthenticationError do
         client.checkout_reader(:mode => :primary)
       end
     end

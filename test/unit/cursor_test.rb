@@ -15,7 +15,7 @@
 require 'test_helper'
 
 class CursorUnitTest < Test::Unit::TestCase
-  class Mongo::Cursor
+  class MongoV1::Cursor
     public :construct_query_spec
   end
 

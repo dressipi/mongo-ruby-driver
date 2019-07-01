@@ -16,7 +16,7 @@ require 'test_helper'
 
 class ThreadingTest < Test::Unit::TestCase
 
-  include Mongo
+  include MongoV1
 
   def setup
     @client = standard_connection(:pool_size => 10, :pool_timeout => 30)
@@ -42,7 +42,7 @@ class ThreadingTest < Test::Unit::TestCase
     300.times do |i|
       threads << Thread.new do
         if i % 2 == 0
-          assert_raise Mongo::OperationFailure do
+          assert_raise MongoV1::OperationFailure do
             @unique.update({"test" => "insert"}, {"$set" => {"test" => "update"}})
           end
         else
@@ -60,7 +60,7 @@ class ThreadingTest < Test::Unit::TestCase
     300.times do |i|
       threads << Thread.new do
         if i % 2 == 0
-          assert_raise Mongo::OperationFailure do
+          assert_raise MongoV1::OperationFailure do
             @unique.insert({"test" => "insert"})
           end
         else

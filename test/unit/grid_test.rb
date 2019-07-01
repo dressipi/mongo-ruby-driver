@@ -50,14 +50,14 @@ class GridUnitTest < Test::Unit::TestCase
 
     context "Grid classes with slave connection" do
       setup do
-        @chunks.stubs(:ensure_index).raises(Mongo::ConnectionFailure)
-        @files.stubs(:ensure_index).raises(Mongo::ConnectionFailure)
+        @chunks.stubs(:ensure_index).raises(MongoV1::ConnectionFailure)
+        @files.stubs(:ensure_index).raises(MongoV1::ConnectionFailure)
       end
 
       should "not create indexes for Grid" do
         grid = Grid.new(@db)
         data = "hello world!"
-        assert_raise Mongo::ConnectionFailure do
+        assert_raise MongoV1::ConnectionFailure do
           grid.put(data)
         end
       end
@@ -65,7 +65,7 @@ class GridUnitTest < Test::Unit::TestCase
       should "not create indexes for GridFileSystem" do
         gridfs = GridFileSystem.new(@db)
         data = "hello world!"
-        assert_raise Mongo::ConnectionFailure do
+        assert_raise MongoV1::ConnectionFailure do
           gridfs.open('image.jpg', 'w') do |f|
             f.write data
           end

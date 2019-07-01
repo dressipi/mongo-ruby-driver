@@ -13,7 +13,7 @@
 # limitations under the License.
 
 require 'test_helper'
-include Mongo
+include MongoV1
 
 class ShardingPoolManagerUnitTest < Test::Unit::TestCase
 
@@ -68,7 +68,7 @@ class ShardingPoolManagerUnitTest < Test::Unit::TestCase
       )
 
       seed = ['localhost:27017']
-      manager = Mongo::ShardingPoolManager.new(@client, seed)
+      manager = MongoV1::ShardingPoolManager.new(@client, seed)
       @client.stubs(:local_manager).returns(manager)
       manager.connect
 

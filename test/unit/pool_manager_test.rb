@@ -13,7 +13,7 @@
 # limitations under the License.
 
 require 'test_helper'
-include Mongo
+include MongoV1
 
 class PoolManagerUnitTest < Test::Unit::TestCase
 
@@ -68,7 +68,7 @@ class PoolManagerUnitTest < Test::Unit::TestCase
       )
 
       seeds = [['localhost', 27017]]
-      manager = Mongo::PoolManager.new(@client, seeds)
+      manager = MongoV1::PoolManager.new(@client, seeds)
       @client.stubs(:local_manager).returns(manager)
       manager.connect
 

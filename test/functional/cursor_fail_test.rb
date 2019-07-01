@@ -17,7 +17,7 @@ require 'logger'
 
 class CursorFailTest < Test::Unit::TestCase
 
-  include Mongo
+  include MongoV1
 
   def setup
     @connection = standard_connection

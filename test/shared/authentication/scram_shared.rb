@@ -17,7 +17,7 @@ module SCRAMTests
   def setup_conversation
     SecureRandom.expects(:base64).returns('NDA2NzU3MDY3MDYwMTgy')
     @password = Digest::MD5.hexdigest("user:mongo:pencil")
-    @scram = Mongo::Authentication::SCRAM.new({ :username => 'user' }, @password)
+    @scram = MongoV1::Authentication::SCRAM.new({ :username => 'user' }, @password)
   end
 
   def test_scram_authenticate
@@ -56,7 +56,7 @@ module SCRAMTests
       'r=NDA2NzU4MDY3MDYwMTgyt7/+IWaw1HaZZ5NmPJUTWapLpH2Gg+d8,s=AVvQXzAbxweH2RYDICaplw==,i=10000'
     )
     reply = { 'conversationId' => 1, 'done' => false, 'payload' => payload, 'ok' => 1.0 }
-    assert_raise_error Mongo::InvalidNonce do
+    assert_raise_error MongoV1::InvalidNonce do
       @scram.continue(reply)
     end
   end
@@ -85,7 +85,7 @@ module SCRAMTests
     @scram.continue(continue_reply)
     payload = BSONV1::Binary.new('v=LQ+8yhQeVL2a3Dh+TDJ7xHz4Srk=')
     reply = { 'conversationId' => 1, 'done' => false, 'payload' => payload, 'ok' => 1.0 }
-    assert_raise_error Mongo::InvalidSignature do
+    assert_raise_error MongoV1::InvalidSignature do
       @scram.finalize(reply)
     end
   end

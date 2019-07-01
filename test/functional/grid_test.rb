@@ -13,7 +13,7 @@
 # limitations under the License.
 
 require 'test_helper'
-include Mongo
+include MongoV1
 
 def read_and_write_stream(filename, read_length, opts={})
   io   = File.open(File.join(TEST_DATA, filename), 'r+b')

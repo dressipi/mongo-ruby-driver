@@ -21,7 +21,7 @@ require 'shared/authentication/scram_shared'
 
 
 class AuthenticationTest < Test::Unit::TestCase
-  include Mongo
+  include MongoV1
   include BasicAuthTests
   include SASLPlainTests
   include BulkAPIAuthTests

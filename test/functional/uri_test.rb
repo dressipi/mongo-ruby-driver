@@ -15,30 +15,30 @@
 require 'test_helper'
 
 class URITest < Test::Unit::TestCase
-  include Mongo
+  include MongoV1
 
   def test_uri_without_port
-    parser = Mongo::URIParser.new('mongodb://localhost')
+    parser = MongoV1::URIParser.new('mongodb://localhost')
     assert_equal 1, parser.nodes.length
     assert_equal 'localhost', parser.nodes[0][0]
     assert_equal 27017, parser.nodes[0][1]
   end
 
   def test_basic_uri
-    parser = Mongo::URIParser.new('mongodb://localhost:27018')
+    parser = MongoV1::URIParser.new('mongodb://localhost:27018')
     assert_equal 1, parser.nodes.length
     assert_equal 'localhost', parser.nodes[0][0]
     assert_equal 27018, parser.nodes[0][1]
   end
 
   def test_unix_socket
-    parser = Mongo::URIParser.new('mongodb:///tmp/mongod.sock')
+    parser = MongoV1::URIParser.new('mongodb:///tmp/mongod.sock')
     assert_equal 1, parser.nodes.length
     assert_equal '/tmp/mongod.sock', parser.nodes[0][0]
   end
 
   def test_unix_socket_with_user
-    parser = Mongo::URIParser.new('mongodb://bob:secret.word@/tmp/mongod.sock')
+    parser = MongoV1::URIParser.new('mongodb://bob:secret.word@/tmp/mongod.sock')
     assert_equal 1, parser.nodes.length
     assert_equal '/tmp/mongod.sock', parser.nodes[0][0]
     assert_equal "bob", parser.auths.first[:username]
@@ -47,7 +47,7 @@ class URITest < Test::Unit::TestCase
   end
 
   def test_unix_socket_with_db
-    parser = Mongo::URIParser.new('mongodb://bob:secret.word@/tmp/mongod.sock/some_db')
+    parser = MongoV1::URIParser.new('mongodb://bob:secret.word@/tmp/mongod.sock/some_db')
     assert_equal 1, parser.nodes.length
     assert_equal '/tmp/mongod.sock', parser.nodes[0][0]
     assert_equal 'bob', parser.auths.first[:username]
@@ -56,32 +56,32 @@ class URITest < Test::Unit::TestCase
   end
 
   def test_ipv6_format
-    parser = Mongo::URIParser.new('mongodb://[::1]:27018')
+    parser = MongoV1::URIParser.new('mongodb://[::1]:27018')
     assert_equal 1, parser.nodes.length
     assert_equal '::1', parser.nodes[0][0]
     assert_equal 27018, parser.nodes[0][1]
 
-    parser = Mongo::URIParser.new('mongodb://[::1]')
+    parser = MongoV1::URIParser.new('mongodb://[::1]')
     assert_equal 1, parser.nodes.length
     assert_equal '::1', parser.nodes[0][0]
   end
 
   def test_ipv6_format_multi
-    parser = Mongo::URIParser.new('mongodb://[::1]:27017,[::1]:27018')
+    parser = MongoV1::URIParser.new('mongodb://[::1]:27017,[::1]:27018')
     assert_equal 2, parser.nodes.length
     assert_equal '::1', parser.nodes[0][0]
     assert_equal 27017, parser.nodes[0][1]
     assert_equal '::1', parser.nodes[1][0]
     assert_equal 27018, parser.nodes[1][1]
 
-    parser = Mongo::URIParser.new('mongodb://[::1]:27017,localhost:27018')
+    parser = MongoV1::URIParser.new('mongodb://[::1]:27017,localhost:27018')
     assert_equal 2, parser.nodes.length
     assert_equal '::1', parser.nodes[0][0]
     assert_equal 27017, parser.nodes[0][1]
     assert_equal 'localhost', parser.nodes[1][0]
     assert_equal 27018, parser.nodes[1][1]
 
-    parser = Mongo::URIParser.new('mongodb://localhost:27017,[::1]:27018')
+    parser = MongoV1::URIParser.new('mongodb://localhost:27017,[::1]:27018')
     assert_equal 2, parser.nodes.length
     assert_equal 'localhost', parser.nodes[0][0]
     assert_equal 27017, parser.nodes[0][1]
@@ -90,99 +90,99 @@ class URITest < Test::Unit::TestCase
   end
 
   def test_multiple_uris
-    parser = Mongo::URIParser.new('mongodb://a.example.com:27018,b.example.com')
+    parser = MongoV1::URIParser.new('mongodb://a.example.com:27018,b.example.com')
     assert_equal 2, parser.nodes.length
     assert_equal ['a.example.com', 27018], parser.nodes[0]
     assert_equal ['b.example.com', 27017], parser.nodes[1]
   end
 
   def test_username_without_password
-    parser = Mongo::URIParser.new('mongodb://bob:@localhost?authMechanism=GSSAPI')
+    parser = MongoV1::URIParser.new('mongodb://bob:@localhost?authMechanism=GSSAPI')
     assert_equal "bob", parser.auths.first[:username]
     assert_equal nil, parser.auths.first[:password]
 
-    parser = Mongo::URIParser.new('mongodb://bob@localhost?authMechanism=GSSAPI')
+    parser = MongoV1::URIParser.new('mongodb://bob@localhost?authMechanism=GSSAPI')
     assert_equal nil, parser.auths.first[:password]
 
     assert_raise_error MongoArgumentError do
-      Mongo::URIParser.new('mongodb://bob:@localhost')
+      MongoV1::URIParser.new('mongodb://bob:@localhost')
     end
 
     assert_raise_error MongoArgumentError do
-      Mongo::URIParser.new('mongodb://bob@localhost')
+      MongoV1::URIParser.new('mongodb://bob@localhost')
     end
   end
 
   def test_username_without_password_unix_socket
-    parser = Mongo::URIParser.new('mongodb://bob:@/tmp/mongod.sock?authMechanism=GSSAPI')
+    parser = MongoV1::URIParser.new('mongodb://bob:@/tmp/mongod.sock?authMechanism=GSSAPI')
     assert_equal "bob", parser.auths.first[:username]
     assert_equal nil, parser.auths.first[:password]
 
-    parser = Mongo::URIParser.new('mongodb://bob@/tmp/mongod.sock?authMechanism=GSSAPI')
+    parser = MongoV1::URIParser.new('mongodb://bob@/tmp/mongod.sock?authMechanism=GSSAPI')
     assert_equal nil, parser.auths.first[:password]
 
     assert_raise_error MongoArgumentError do
-      Mongo::URIParser.new('mongodb://bob:@/tmp/mongod.sock')
+      MongoV1::URIParser.new('mongodb://bob:@/tmp/mongod.sock')
     end
 
     assert_raise_error MongoArgumentError do
-      Mongo::URIParser.new('mongodb://bob@/tmp/mongod.sock')
+      MongoV1::URIParser.new('mongodb://bob@/tmp/mongod.sock')
     end
   end
 
   def test_complex_passwords
-    parser = Mongo::URIParser.new('mongodb://bob:secret.word@a.example.com:27018/test')
+    parser = MongoV1::URIParser.new('mongodb://bob:secret.word@a.example.com:27018/test')
     assert_equal "bob", parser.auths.first[:username]
     assert_equal "secret.word", parser.auths.first[:password]
 
-    parser = Mongo::URIParser.new('mongodb://bob:s-_3#%R.t@a.example.com:27018/test')
+    parser = MongoV1::URIParser.new('mongodb://bob:s-_3#%R.t@a.example.com:27018/test')
     assert_equal "bob", parser.auths.first[:username]
     assert_equal "s-_3#%R.t", parser.auths.first[:password]
 
     assert_raise_error MongoArgumentError do
-      Mongo::URIParser.new('mongodb://doctor:bad:wolf@gallifrey.com:27018/test')
+      MongoV1::URIParser.new('mongodb://doctor:bad:wolf@gallifrey.com:27018/test')
     end
 
     assert_raise_error MongoArgumentError do
-      Mongo::URIParser.new('mongodb://doctor:bow@tie@gallifrey.com:27018/test')
+      MongoV1::URIParser.new('mongodb://doctor:bow@tie@gallifrey.com:27018/test')
     end
   end
 
   def test_complex_usernames
-    parser = Mongo::URIParser.new('mongodb://s-_3#%R.t:secret.word@a.example.com:27018/test')
+    parser = MongoV1::URIParser.new('mongodb://s-_3#%R.t:secret.word@a.example.com:27018/test')
     assert_equal "s-_3#%R.t", parser.auths.first[:username]
 
     assert_raise_error MongoArgumentError do
-      Mongo::URIParser.new('mongodb://doc:tor:badwolf@gallifrey.com:27018/test')
+      MongoV1::URIParser.new('mongodb://doc:tor:badwolf@gallifrey.com:27018/test')
     end
 
     assert_raise_error MongoArgumentError do
-      Mongo::URIParser.new('mongodb://d@ctor:bowtie@gallifrey.com:27018/test')
+      MongoV1::URIParser.new('mongodb://d@ctor:bowtie@gallifrey.com:27018/test')
     end
   end
 
   def test_username_with_encoded_symbol
-    parser = Mongo::URIParser.new('mongodb://f%40o:bar@localhost/admin')
+    parser = MongoV1::URIParser.new('mongodb://f%40o:bar@localhost/admin')
     username = parser.auths.first[:username]
     assert_equal 'f@o', username
 
-    parser = Mongo::URIParser.new('mongodb://f%3Ao:bar@localhost/admin')
+    parser = MongoV1::URIParser.new('mongodb://f%3Ao:bar@localhost/admin')
     username = parser.auths.first[:username]
     assert_equal 'f:o', username
   end
 
   def test_password_with_encoded_symbol
-    parser = Mongo::URIParser.new('mongodb://foo:b%40r@localhost/admin')
+    parser = MongoV1::URIParser.new('mongodb://foo:b%40r@localhost/admin')
     password = parser.auths.first[:password]
     assert_equal 'b@r', password
 
-    parser = Mongo::URIParser.new('mongodb://foo:b%3Ar@localhost/admin')
+    parser = MongoV1::URIParser.new('mongodb://foo:b%3Ar@localhost/admin')
     password = parser.auths.first[:password]
     assert_equal 'b:r', password
   end
 
   def test_opts_with_semincolon_separator
-    parser = Mongo::URIParser.new('mongodb://localhost:27018?connect=direct;slaveok=true;safe=true')
+    parser = MongoV1::URIParser.new('mongodb://localhost:27018?connect=direct;slaveok=true;safe=true')
     assert_equal 'direct', parser.connect
     assert parser.direct?
     assert parser.slaveok
@@ -190,7 +190,7 @@ class URITest < Test::Unit::TestCase
   end
 
   def test_opts_with_amp_separator
-    parser = Mongo::URIParser.new('mongodb://localhost:27018?connect=direct&slaveok=true&safe=true')
+    parser = MongoV1::URIParser.new('mongodb://localhost:27018?connect=direct&slaveok=true&safe=true')
     assert_equal 'direct', parser.connect
     assert parser.direct?
     assert parser.slaveok
@@ -198,7 +198,7 @@ class URITest < Test::Unit::TestCase
   end
 
   def test_opts_with_uri_encoded_stuff
-    parser = Mongo::URIParser.new('mongodb://localhost:27018?connect=%64%69%72%65%63%74&slaveok=%74%72%75%65&safe=true')
+    parser = MongoV1::URIParser.new('mongodb://localhost:27018?connect=%64%69%72%65%63%74&slaveok=%74%72%75%65&safe=true')
     assert_equal 'direct', parser.connect
     assert parser.direct?
     assert parser.slaveok
@@ -207,12 +207,12 @@ class URITest < Test::Unit::TestCase
 
   def test_opts_made_invalid_by_mixed_separators
     assert_raise_error MongoArgumentError, "must not mix URL separators ; and &" do
-      Mongo::URIParser.new('mongodb://localhost:27018?replicaset=foo;bar&slaveok=true&safe=true')
+      MongoV1::URIParser.new('mongodb://localhost:27018?replicaset=foo;bar&slaveok=true&safe=true')
     end
   end
 
   def test_opts_safe
-    parser = Mongo::URIParser.new('mongodb://localhost:27018?safe=true;w=2;journal=true;fsync=true;wtimeoutMS=200')
+    parser = MongoV1::URIParser.new('mongodb://localhost:27018?safe=true;w=2;journal=true;fsync=true;wtimeoutMS=200')
     assert parser.safe
     assert_equal 2, parser.w
     assert parser.fsync
@@ -221,18 +221,18 @@ class URITest < Test::Unit::TestCase
   end
 
   def test_opts_ssl
-    parser = Mongo::URIParser.new('mongodb://localhost:27018?ssl=true;w=2;journal=true;fsync=true;wtimeoutMS=200')
+    parser = MongoV1::URIParser.new('mongodb://localhost:27018?ssl=true;w=2;journal=true;fsync=true;wtimeoutMS=200')
     assert parser.ssl
   end
 
   def test_opts_nonsafe_timeout
-    parser = Mongo::URIParser.new('mongodb://localhost:27018?connectTimeoutMS=5500&socketTimeoutMS=500')
+    parser = MongoV1::URIParser.new('mongodb://localhost:27018?connectTimeoutMS=5500&socketTimeoutMS=500')
     assert_equal 5.5, parser.connecttimeoutms
     assert_equal 0.5, parser.sockettimeoutms
   end
 
   def test_opts_replica_set
-    parser = Mongo::URIParser.new('mongodb://localhost:27018?connect=replicaset;replicaset=foo')
+    parser = MongoV1::URIParser.new('mongodb://localhost:27018?connect=replicaset;replicaset=foo')
     assert_equal 'foo', parser.replicaset
     assert_equal 'replicaset', parser.connect
     assert parser.replicaset?
@@ -240,77 +240,77 @@ class URITest < Test::Unit::TestCase
 
   def test_opts_conflicting_replica_set
     assert_raise_error MongoArgumentError, "connect=direct conflicts with setting a replicaset name" do
-      Mongo::URIParser.new('mongodb://localhost:27018?connect=direct;replicaset=foo')
+      MongoV1::URIParser.new('mongodb://localhost:27018?connect=direct;replicaset=foo')
     end
   end
 
   def test_case_insensitivity
-    parser = Mongo::URIParser.new('mongodb://localhost:27018?wtimeoutms=500&JOURNAL=true&SaFe=true')
+    parser = MongoV1::URIParser.new('mongodb://localhost:27018?wtimeoutms=500&JOURNAL=true&SaFe=true')
     assert_equal 500, parser.wtimeoutms
     assert_equal true, parser.journal
     assert_equal true, parser.safe
   end
 
   def test_read_preference_option_primary
-    parser = Mongo::URIParser.new("mongodb://localhost:27018?readPreference=primary")
+    parser = MongoV1::URIParser.new("mongodb://localhost:27018?readPreference=primary")
     assert_equal :primary, parser.readpreference
   end
 
   def test_read_preference_option_primary_unix_sock
-    parser = Mongo::URIParser.new("mongodb:///tmp/mongod.sock?readPreference=primary")
+    parser = MongoV1::URIParser.new("mongodb:///tmp/mongod.sock?readPreference=primary")
     assert_equal :primary, parser.readpreference
   end
 
   def test_read_preference_option_primary_preferred
-    parser = Mongo::URIParser.new("mongodb://localhost:27018?readPreference=primaryPreferred")
+    parser = MongoV1::URIParser.new("mongodb://localhost:27018?readPreference=primaryPreferred")
     assert_equal :primary_preferred, parser.readpreference
   end
 
   def test_read_preference_option_secondary
-    parser = Mongo::URIParser.new("mongodb://localhost:27018?readPreference=secondary")
+    parser = MongoV1::URIParser.new("mongodb://localhost:27018?readPreference=secondary")
     assert_equal :secondary, parser.readpreference
   end
 
   def test_read_preference_option_secondary_preferred
-    parser = Mongo::URIParser.new("mongodb://localhost:27018?readPreference=secondaryPreferred")
+    parser = MongoV1::URIParser.new("mongodb://localhost:27018?readPreference=secondaryPreferred")
     assert_equal :secondary_preferred, parser.readpreference
   end
 
   def test_read_preference_option_nearest
-    parser = Mongo::URIParser.new("mongodb://localhost:27018?readPreference=nearest")
+    parser = MongoV1::URIParser.new("mongodb://localhost:27018?readPreference=nearest")
     assert_equal :nearest, parser.readpreference
   end
 
   def test_read_preference_option_with_invalid
     assert_raise_error MongoArgumentError  do
-      Mongo::URIParser.new("mongodb://localhost:27018?readPreference=invalid")
+      MongoV1::URIParser.new("mongodb://localhost:27018?readPreference=invalid")
     end
   end
 
   def test_read_preference_connection_options
-    parser = Mongo::URIParser.new("mongodb://localhost:27018?replicaset=test&readPreference=nearest")
+    parser = MongoV1::URIParser.new("mongodb://localhost:27018?replicaset=test&readPreference=nearest")
     assert_equal :nearest, parser.connection_options[:read]
   end
 
   def test_read_preference_connection_options_with_no_replica_set
-    parser = Mongo::URIParser.new("mongodb://localhost:27018?readPreference=nearest")
+    parser = MongoV1::URIParser.new("mongodb://localhost:27018?readPreference=nearest")
     assert_equal :nearest, parser.connection_options[:read]
   end
 
   def test_read_preference_connection_options_prefers_preference_over_slaveok
-    parser = Mongo::URIParser.new("mongodb://localhost:27018?replicaset=test&readPreference=nearest&slaveok=true")
+    parser = MongoV1::URIParser.new("mongodb://localhost:27018?replicaset=test&readPreference=nearest&slaveok=true")
     assert_equal :nearest, parser.connection_options[:read]
   end
 
   def test_read_preference_tags
-    parser = Mongo::URIParser.new("mongodb://localhost:27017?replicaset=test&" +
+    parser = MongoV1::URIParser.new("mongodb://localhost:27017?replicaset=test&" +
                                   "readPreferenceTags=dc:ny,rack:1")
     expected_tags = [{ 'dc' => 'ny', 'rack' => '1' }]
     assert_equal expected_tags, parser.connection_options[:tag_sets]
   end
 
   def test_read_preference_tags_multiple
-    parser = Mongo::URIParser.new("mongodb://localhost:27017?replicaset=test&" +
+    parser = MongoV1::URIParser.new("mongodb://localhost:27017?replicaset=test&" +
                                   "readPreferenceTags=dc:ny,rack:1&readPreferenceTags=dc:bos")
     expected_tags = [{'dc' => 'ny', 'rack' => '1'}, { 'dc' => 'bos' }]
     assert_equal expected_tags, parser.connection_options[:tag_sets]
@@ -318,27 +318,27 @@ class URITest < Test::Unit::TestCase
 
   def test_invalid_read_preference_tags
     assert_raise_error MongoArgumentError do
-      Mongo::URIParser.new("mongodb://localhost:27017?replicaset=test&" +
+      MongoV1::URIParser.new("mongodb://localhost:27017?replicaset=test&" +
                                   "readPreferenceTags=dc")
     end
   end
 
   def test_invalid_read_preference_tags_multiple
     assert_raise_error MongoArgumentError do
-      Mongo::URIParser.new("mongodb://localhost:27017?replicaset=test&" +
+      MongoV1::URIParser.new("mongodb://localhost:27017?replicaset=test&" +
                                   "readPreferenceTags=dc:nyc&readPreferenceTags=dc")
     end
   end
 
   def test_connection_when_sharded_with_no_options
-    parser = Mongo::URIParser.new("mongodb://localhost:27017,localhost:27018")
+    parser = MongoV1::URIParser.new("mongodb://localhost:27017,localhost:27018")
     client = parser.connection({}, false, true)
     assert_equal [[ "localhost", 27017 ], [ "localhost", 27018 ]], client.seeds
     assert_true client.mongos?
   end
 
   def test_connection_when_sharded_with_options
-    parser = Mongo::URIParser.new("mongodb://localhost:27017,localhost:27018")
+    parser = MongoV1::URIParser.new("mongodb://localhost:27017,localhost:27018")
     client = parser.connection({ :refresh_interval => 10 }, false, true)
     assert_equal [[ "localhost", 27017 ], [ "localhost", 27018 ]], client.seeds
     assert_equal 10, client.refresh_interval
@@ -346,7 +346,7 @@ class URITest < Test::Unit::TestCase
   end
 
   def test_connection_when_sharded_with_uri_options
-    parser = Mongo::URIParser.new("mongodb://localhost:27017,localhost:27018?readPreference=nearest")
+    parser = MongoV1::URIParser.new("mongodb://localhost:27017,localhost:27018?readPreference=nearest")
     client = parser.connection({}, false, true)
     assert_equal [[ "localhost", 27017 ], [ "localhost", 27018 ]], client.seeds
     assert_equal :nearest, client.read
@@ -354,30 +354,30 @@ class URITest < Test::Unit::TestCase
   end
 
   def test_auth_source
-    parser = Mongo::URIParser.new("mongodb://user:pass@localhost?authSource=foobar")
+    parser = MongoV1::URIParser.new("mongodb://user:pass@localhost?authSource=foobar")
     assert_equal 'foobar', parser.authsource
   end
 
   def test_auth_mechanism
-    parser = Mongo::URIParser.new("mongodb://user@localhost?authMechanism=MONGODB-X509")
+    parser = MongoV1::URIParser.new("mongodb://user@localhost?authMechanism=MONGODB-X509")
     assert_equal 'MONGODB-X509', parser.authmechanism
 
     assert_raise_error MongoArgumentError do
-      Mongo::URIParser.new("mongodb://user@localhost?authMechanism=INVALID")
+      MongoV1::URIParser.new("mongodb://user@localhost?authMechanism=INVALID")
     end
   end
 
   def test_auth_mechanism_properties
     uri = "mongodb://user@localhost?authMechanism=GSSAPI&authMechanismProperties=SERVICE_NAME" +
             ":mongodb,CANONICALIZE_HOST_NAME:true"
-    parser = Mongo::URIParser.new(uri)
+    parser = MongoV1::URIParser.new(uri)
     properties = {:service_name => "mongodb", :canonicalize_host_name => true}
     assert_equal properties, parser.authmechanismproperties
     assert_equal 'GSSAPI', parser.authmechanism
 
     uri = "mongodb://user@localhost?authMechanism=GSSAPI&authMechanismProperties=SERVICE_NAME" +
             ":MongoDB,CANONICALIZE_HOST_NAME:false,SERVICE_REALM:test"
-    parser = Mongo::URIParser.new(uri)
+    parser = MongoV1::URIParser.new(uri)
     properties = {:service_name => "MongoDB", :canonicalize_host_name => false, :service_realm => "test"}
     assert_equal properties, parser.authmechanismproperties
     assert_equal 'GSSAPI', parser.authmechanism
@@ -387,37 +387,37 @@ class URITest < Test::Unit::TestCase
     uri = "mongodb://user@localhost?authMechanism=GSSAPI&authMechanismProperties=SERVICE_NAME" +
             ":mongodb,INVALID_PROPERTY:true"
     assert_raise_error MongoArgumentError do
-      parser = Mongo::URIParser.new(uri)
+      parser = MongoV1::URIParser.new(uri)
     end
 
     uri = "mongodb://user@localhost?authMechanism=PLAIN&authMechanismProperties="+
             "SERVICE_NAME:mongodb"
     assert_raise_error MongoArgumentError do
-      parser = Mongo::URIParser.new(uri)
+      parser = MongoV1::URIParser.new(uri)
     end
   end
 
   def test_sasl_plain
-    parser = Mongo::URIParser.new("mongodb://user:pass@localhost?authMechanism=PLAIN")
+    parser = MongoV1::URIParser.new("mongodb://user:pass@localhost?authMechanism=PLAIN")
     assert_equal 'PLAIN', parser.auths.first[:mechanism]
     assert_equal 'user', parser.auths.first[:username]
     assert_equal 'pass', parser.auths.first[:password]
     assert_equal 'admin', parser.auths.first[:source]
 
-    parser = Mongo::URIParser.new("mongodb://foo%2Fbar%40example.net:pass@localhost/some_db?authMechanism=PLAIN")
+    parser = MongoV1::URIParser.new("mongodb://foo%2Fbar%40example.net:pass@localhost/some_db?authMechanism=PLAIN")
     assert_equal 'PLAIN', parser.auths.first[:mechanism]
     assert_equal 'foo/bar@example.net', parser.auths.first[:username]
     assert_equal 'pass', parser.auths.first[:password]
     assert_equal 'some_db', parser.auths.first[:source]
 
     assert_raise_error MongoArgumentError  do
-      Mongo::URIParser.new("mongodb://user@localhost/some_db?authMechanism=PLAIN")
+      MongoV1::URIParser.new("mongodb://user@localhost/some_db?authMechanism=PLAIN")
     end
   end
 
   def test_gssapi
     uri = "mongodb://foo%2Fbar%40example.net@localhost?authMechanism=GSSAPI;"
-    parser = Mongo::URIParser.new(uri)
+    parser = MongoV1::URIParser.new(uri)
     assert_equal 'GSSAPI', parser.auths.first[:mechanism]
     assert_equal 'foo/bar@example.net', parser.auths.first[:username]
 
@@ -425,7 +425,7 @@ class URITest < Test::Unit::TestCase
     uri = "mongodb://foo%2Fbar%40example.net@localhost?authMechanism=GSSAPI;" +
             "authMechanismProperties=SERVICE_NAME:mongodb,SERVICE_REALM:example," +
             "CANONICALIZE_HOST_NAME:true"
-    parser = Mongo::URIParser.new(uri)
+    parser = MongoV1::URIParser.new(uri)
     assert_equal 'GSSAPI', parser.auths.first[:mechanism]
     assert_equal 'foo/bar@example.net', parser.auths.first[:username]
     assert_equal 'mongodb', parser.auths.first[:extra][:service_name]
@@ -438,7 +438,7 @@ class URITest < Test::Unit::TestCase
     uri = "mongodb://localhost?authSource=FooBar;" +
             "replicaSet=Foo;" +
             "w=Majority"
-    parser = Mongo::URIParser.new(uri)
+    parser = MongoV1::URIParser.new(uri)
     assert_equal 'FooBar',  parser.authsource
     assert_equal 'Foo',     parser.replicaset
     assert_equal :Majority, parser.w

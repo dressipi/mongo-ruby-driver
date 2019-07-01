@@ -15,7 +15,7 @@
 require "test_helper"
 
 class MongoShardedClientUnitTest < Test::Unit::TestCase
-  include Mongo
+  include MongoV1
 
   def test_initialize_with_single_mongos_uri
     uri = "mongodb://localhost:27017"

@@ -16,7 +16,7 @@ require 'test_helper'
 
 class WriteConcernUnitTest < Test::Unit::TestCase
 
-  context "Write-Concern modes on Mongo::MongoClient " do
+  context "Write-Concern modes on MongoV1::MongoClient " do
     setup do
       @write_concern = {
         :w        => 7,
@@ -25,7 +25,7 @@ class WriteConcernUnitTest < Test::Unit::TestCase
         :wtimeout => nil
       }
 
-      class Mongo::MongoClient
+      class MongoV1::MongoClient
         public :build_get_last_error_message, :build_command_message
       end
 

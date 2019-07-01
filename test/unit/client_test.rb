@@ -13,10 +13,10 @@
 # limitations under the License.
 
 require 'test_helper'
-include Mongo
+include MongoV1
 
 class ClientUnitTest < Test::Unit::TestCase
-  context "Mongo::MongoClient initialization " do
+  context "MongoV1::MongoClient initialization " do
     context "given a single node" do
       setup do
         @client = MongoClient.new('localhost', 27017, :connect => false)
@@ -42,7 +42,7 @@ class ClientUnitTest < Test::Unit::TestCase
       end
 
       should "set op timeout to default" do
-        assert_equal Mongo::MongoClient::DEFAULT_OP_TIMEOUT, @client.op_timeout
+        assert_equal MongoV1::MongoClient::DEFAULT_OP_TIMEOUT, @client.op_timeout
       end
 
       should "default slave_ok to false" do
