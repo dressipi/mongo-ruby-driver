@@ -62,7 +62,7 @@ class CollectionUnitTest < Test::Unit::TestCase
     end
 
     should "not log binary data" do
-      data = BSON::Binary.new(("BINARY " * 1000).unpack("c*"))
+      data = BSONV1::Binary.new(("BINARY " * 1000).unpack("c*"))
       @client.expects(:send_message_with_gle).with do |op, msg, log|
         op == 2002
       end
@@ -139,7 +139,7 @@ class CollectionUnitTest < Test::Unit::TestCase
     should "call generate_indexes for each key when calling ensure_indexes with a hash" do
       @db.cache_time = 300
       @coll = @db.collection('collection-unit-test')
-      oh = BSON::OrderedHash.new
+      oh = BSONV1::OrderedHash.new
       oh['x'] = Mongo::DESCENDING
       oh['y'] = Mongo::DESCENDING
       @coll.expects(:generate_indexes).once.with do |a, b, c|
@@ -149,7 +149,7 @@ class CollectionUnitTest < Test::Unit::TestCase
       if RUBY_VERSION > '1.9'
           @coll.ensure_index({"x" => Mongo::DESCENDING, "y" => Mongo::DESCENDING})
       else
-          ordered_hash = BSON::OrderedHash.new
+          ordered_hash = BSONV1::OrderedHash.new
           ordered_hash['x'] = Mongo::DESCENDING
           ordered_hash['y'] = Mongo::DESCENDING
           @coll.ensure_index(ordered_hash)

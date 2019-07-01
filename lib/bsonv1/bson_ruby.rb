@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-module BSON
+module BSONV1
   NULL_BYTE = "\x00"
 
   # A BSON seralizer/deserializer in pure Ruby.
@@ -209,7 +209,7 @@ module BSON
       end
       @buf.rewind
       @buf.get_int                # eat message size
-      doc = BSON::OrderedHash.new
+      doc = BSONV1::OrderedHash.new
       while @buf.more?
         type = @buf.get
         case type
@@ -339,7 +339,7 @@ module BSON
       compile = true if compile.nil?
       str = deserialize_cstr(buf)
       options_str = deserialize_cstr(buf)
-      bson_regex = BSON::Regex.new(str, options_str)
+      bson_regex = BSONV1::Regex.new(str, options_str)
       compile ? bson_regex.try_compile : bson_regex
     end
 
@@ -411,7 +411,7 @@ module BSON
     end
 
     def serialize_dbref_element(buf, key, val) # this does NOT use the BSON "\x0C" DBPointer type
-      oh = BSON::OrderedHash.new
+      oh = BSONV1::OrderedHash.new
       oh['$ref'] = val.namespace
       oh['$id'] = val.object_id
       serialize_object_element(buf, key, oh, false)
@@ -478,7 +478,7 @@ module BSON
 
     def serialize_array_element(buf, key, val, check_keys)
       # Turn array into hash with integer indices as keys
-      h = BSON::OrderedHash.new
+      h = BSONV1::OrderedHash.new
       i = 0
       val.each { |v| h[i] = v; i += 1 }
       serialize_object_element(buf, key, h, check_keys, ARRAY)
@@ -496,13 +496,13 @@ module BSON
       options = val.options
       options_str = ''
 
-      if val.is_a?(BSON::Regex)
-        options_str << 'i' if ((options & BSON::Regex::IGNORECASE) != 0)
-        options_str << 'l' if ((options & BSON::Regex::LOCALE_DEPENDENT) != 0)
-        options_str << 'm' if ((options & BSON::Regex::MULTILINE) != 0)
-        options_str << 's' if ((options & BSON::Regex::DOTALL) != 0)
-        options_str << 'u' if ((options & BSON::Regex::UNICODE) != 0)
-        options_str << 'x' if ((options & BSON::Regex::EXTENDED) != 0)
+      if val.is_a?(BSONV1::Regex)
+        options_str << 'i' if ((options & BSONV1::Regex::IGNORECASE) != 0)
+        options_str << 'l' if ((options & BSONV1::Regex::LOCALE_DEPENDENT) != 0)
+        options_str << 'm' if ((options & BSONV1::Regex::MULTILINE) != 0)
+        options_str << 's' if ((options & BSONV1::Regex::DOTALL) != 0)
+        options_str << 'u' if ((options & BSONV1::Regex::UNICODE) != 0)
+        options_str << 'x' if ((options & BSONV1::Regex::EXTENDED) != 0)
       else
         options_str << 'm' # Ruby regular expressions always use multiline mode
         options_str << 'i' if ((options & Regexp::IGNORECASE) != 0)
@@ -604,7 +604,7 @@ module BSON
         STRING
       when Array
         ARRAY
-      when Regexp, BSON::Regex
+      when Regexp, BSONV1::Regex
         REGEX
       when ObjectId
         OID

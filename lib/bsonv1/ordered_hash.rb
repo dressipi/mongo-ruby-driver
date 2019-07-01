@@ -17,13 +17,13 @@
 # Under Ruby 1.9 and greater, this class has no added methods because Ruby's
 # Hash already keeps its keys ordered by order of insertion.
 
-module BSON
+module BSONV1
   class OrderedHash < Hash
 
     def ==(other)
       begin
         case other
-        when BSON::OrderedHash
+        when BSONV1::OrderedHash
            keys == other.keys && values == other.values
         else
           super
@@ -38,7 +38,7 @@ module BSON
     #
     # @return [true, false] true if options can be extracted
     def extractable_options?
-      instance_of?(BSON::OrderedHash)
+      instance_of?(BSONV1::OrderedHash)
     end
 
     def reject
@@ -56,7 +56,7 @@ module BSON
       attr_accessor :ordered_keys
 
       def self.[] *args
-        oh = BSON::OrderedHash.new
+        oh = BSONV1::OrderedHash.new
         if Hash === args[0]
           oh.merge! args[0]
         elsif (args.size % 2) != 0
@@ -185,7 +185,7 @@ module BSON
         end
 
         def eql?(o)
-          if o.instance_of? BSON::OrderedHash
+          if o.instance_of? BSONV1::OrderedHash
             self.hash == o.hash
           else
             false

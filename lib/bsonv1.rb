@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-module BSON
+module BSONV1
   DEFAULT_MAX_BSON_SIZE = 4 * 1024 * 1024
 
   def self.serialize(obj, check_keys=false, move_id=false)
@@ -31,12 +31,12 @@ module BSON
   #
   # @return [ByteBuffer]
   def self.read_bson_document(io)
-    bytebuf = BSON::ByteBuffer.new
+    bytebuf = BSONV1::ByteBuffer.new
     sz = io.read(4).unpack("V")[0]
     bytebuf.put_int(sz)
     bytebuf.put_array(io.read(sz-4).unpack("C*"))
     bytebuf.rewind
-    return BSON.deserialize(bytebuf)
+    return BSONV1.deserialize(bytebuf)
   end
 
   def self.extension?
@@ -50,24 +50,24 @@ begin
   # 1) JRuby and BSON_EXT_DISABLED is set.
   #     -OR-
   # 2) Ruby MRI and big endian or BSON_EXT_DISABLED is set.
-  raise LoadError unless BSON.extension?
+  raise LoadError unless BSONV1.extension?
 
   if RUBY_PLATFORM =~ /java/
-    require 'bson/bson_java'
-    module BSON
+    require 'bsonv1/bson_java'
+    module BSONV1
       BSON_CODER = BSON_JAVA
     end
   else
     require 'bson_ext/cbson'
     raise LoadError unless defined?(CBson::VERSION)
-    require 'bson/bson_c'
-    module BSON
+    require 'bsonv1/bson_c'
+    module BSONV1
       BSON_CODER = BSON_C
     end
   end
 rescue LoadError
-  require 'bson/bson_ruby'
-  module BSON
+  require 'bsonv1/bson_ruby'
+  module BSONV1
     BSON_CODER = BSON_RUBY
   end
 
@@ -100,14 +100,14 @@ rescue LoadError
 end
 
 require 'base64'
-require 'bson/bson_ruby'
-require 'bson/byte_buffer'
-require 'bson/exceptions'
-require 'bson/ordered_hash'
-require 'bson/types/binary'
-require 'bson/types/code'
-require 'bson/types/dbref'
-require 'bson/types/min_max_keys'
-require 'bson/types/regex'
-require 'bson/types/object_id'
-require 'bson/types/timestamp'
+require 'bsonv1/bson_ruby'
+require 'bsonv1/byte_buffer'
+require 'bsonv1/exceptions'
+require 'bsonv1/ordered_hash'
+require 'bsonv1/types/binary'
+require 'bsonv1/types/code'
+require 'bsonv1/types/dbref'
+require 'bsonv1/types/min_max_keys'
+require 'bsonv1/types/regex'
+require 'bsonv1/types/object_id'
+require 'bsonv1/types/timestamp'

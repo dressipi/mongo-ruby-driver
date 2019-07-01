@@ -32,8 +32,8 @@ class TimestampTest < Test::Unit::TestCase
     while(t < 1_000_000_000 ) do
       ts = Timestamp.new(t, 0)
       doc = {:ts => ts}
-      bson = BSON::BSON_CODER.serialize(doc)
-      assert_equal doc[:ts], BSON::BSON_CODER.deserialize(bson)['ts']
+      bson = BSONV1::BSON_CODER.serialize(doc)
+      assert_equal doc[:ts], BSONV1::BSON_CODER.deserialize(bson)['ts']
       t = t * 10
     end
   end
@@ -44,8 +44,8 @@ class TimestampTest < Test::Unit::TestCase
 
     ts = Timestamp.new(test_val, test_val)
     doc = {:ts => ts}
-    bson = BSON::BSON_CODER.serialize(doc)
-    assert_equal doc[:ts], BSON::BSON_CODER.deserialize(bson)['ts']
+    bson = BSONV1::BSON_CODER.serialize(doc)
+    assert_equal doc[:ts], BSONV1::BSON_CODER.deserialize(bson)['ts']
   end
 
   def test_implements_array_for_backward_compatibility

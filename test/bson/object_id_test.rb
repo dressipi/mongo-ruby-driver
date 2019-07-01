@@ -74,7 +74,7 @@ class ObjectIdTest < Test::Unit::TestCase
   end
 
   def test_method
-    assert_equal ObjectId.from_string(@obj.to_s), BSON::ObjectId(@obj.to_s)
+    assert_equal ObjectId.from_string(@obj.to_s), BSONV1::ObjectId(@obj.to_s)
   end
 
   def test_inspect

@@ -23,13 +23,13 @@ require 'test_helper'
 # that way. It must be required by the application code or
 # via bundler for developmet.
 
-require 'bson/support/hash_with_indifferent_access'
+require 'bsonv1/support/hash_with_indifferent_access'
 
 class HashWithIndifferentAccessTest < Test::Unit::TestCase
-  include BSON
+  include BSONV1
 
   def setup
-    @encoder = BSON::BSON_CODER
+    @encoder = BSONV1::BSON_CODER
   end
 
   def test_document
@@ -50,7 +50,7 @@ class HashWithIndifferentAccessTest < Test::Unit::TestCase
     stats['eyes'] = 'blue'
 
     person = HashWithIndifferentAccess.new
-    person['_id'] = BSON::ObjectId.new
+    person['_id'] = BSONV1::ObjectId.new
     person['name'] = 'Mr. Pet Lover'
     person['pets'] = [jimmy, {'name' => 'Sasha'}]
     person['stats'] = stats

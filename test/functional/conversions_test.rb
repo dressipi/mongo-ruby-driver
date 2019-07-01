@@ -38,19 +38,19 @@ class ConversionsTest < Test::Unit::TestCase
   end
 
   def test_hash_as_sort_parameters_with_string
-    sort = BSON::OrderedHash["field", "asc"]
+    sort = BSONV1::OrderedHash["field", "asc"]
     params = hash_as_sort_parameters(sort)
     assert_equal({"field" => 1}, params)
   end
 
   def test_hash_as_sort_parameters_with_hash
-    sort = BSON::OrderedHash["score", {"$meta" => "textScore"}]
+    sort = BSONV1::OrderedHash["score", {"$meta" => "textScore"}]
     params = hash_as_sort_parameters(sort)
     assert_equal({"score" => {"$meta" => "textScore"}}, params)
   end
 
   def test_hash_as_sort_parameters_with_hash_and_string
-    sort = BSON::OrderedHash["score", {"$meta" => "textScore"}, "field", "asc"]
+    sort = BSONV1::OrderedHash["score", {"$meta" => "textScore"}, "field", "asc"]
     params = hash_as_sort_parameters(sort)
     assert_equal({ "score" => {"$meta" => "textScore"}, "field" => 1 }, params)
   end

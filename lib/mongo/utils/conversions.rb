@@ -30,7 +30,7 @@ module Mongo #:nodoc:
     # <tt>hash_as_sort_parameters({:field1 => :asc, "field2" => :desc})</tt> =>
     # <tt>{ "field1" => 1, "field2" => -1}</tt>
     def hash_as_sort_parameters(value)
-      if RUBY_VERSION < '1.9' && !value.is_a?(BSON::OrderedHash)
+      if RUBY_VERSION < '1.9' && !value.is_a?(BSONV1::OrderedHash)
         raise InvalidSortValueError.new(
           "Hashes used to supply sort order must maintain ordering." +
           "Use BSON::OrderedHash."
@@ -53,7 +53,7 @@ module Mongo #:nodoc:
     # <tt>array_as_sort_parameters([["field1", :asc], ["field2", :desc]])</tt> =>
     # <tt>{ "field1" => 1, "field2" => -1}</tt>
     def array_as_sort_parameters(value)
-      order_by = BSON::OrderedHash.new
+      order_by = BSONV1::OrderedHash.new
       if value.first.is_a? Array
         value.each do |param|
           if (param.class.name == "String")

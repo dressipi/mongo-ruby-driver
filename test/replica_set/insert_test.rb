@@ -70,23 +70,23 @@ class ReplicaSetInsertTest < Test::Unit::TestCase
     should "handle error with deferred write concern error - spec Merging Results" do
       if @client.wire_version_feature?(MongoClient::MONGODB_3_0)
         @coll.remove
-        @coll.ensure_index(BSON::OrderedHash[:a, Mongo::ASCENDING], {:unique => true})
+        @coll.ensure_index(BSONV1::OrderedHash[:a, Mongo::ASCENDING], {:unique => true})
         bulk = @coll.initialize_ordered_bulk_op
         bulk.insert({:a => 1})
         bulk.find({:a => 2}).upsert.update({'$set' => {:a => 2}})
         bulk.insert({:a => 1})
         secondary = MongoClient.new(@rs.secondaries.first.host, @rs.secondaries.first.port)
-        cmd = BSON::OrderedHash[:configureFailPoint, 'rsSyncApplyStop', :mode, 'alwaysOn']
+        cmd = BSONV1::OrderedHash[:configureFailPoint, 'rsSyncApplyStop', :mode, 'alwaysOn']
         secondary['admin'].command(cmd)
         ex = assert_raise BulkWriteError do
           bulk.execute({:w => @rs.servers.size, :wtimeout => 1})
         end
-        cmd = BSON::OrderedHash[:configureFailPoint, 'rsSyncApplyStop', :mode, 'off']
+        cmd = BSONV1::OrderedHash[:configureFailPoint, 'rsSyncApplyStop', :mode, 'off']
         secondary['admin'].command(cmd)
       else
         with_write_commands_and_operations(@db.connection) do |wire_version|
           @coll.remove
-          @coll.ensure_index(BSON::OrderedHash[:a, Mongo::ASCENDING], {:unique => true})
+          @coll.ensure_index(BSONV1::OrderedHash[:a, Mongo::ASCENDING], {:unique => true})
           bulk = @coll.initialize_ordered_bulk_op
           bulk.insert({:a => 1})
           bulk.find({:a => 2}).upsert.update({'$set' => {:a => 2}})
@@ -132,7 +132,7 @@ class ReplicaSetInsertTest < Test::Unit::TestCase
     should "handle unordered errors with deferred write concern error - spec Merging Results" do # TODO - spec review
       with_write_commands_and_operations(@db.connection) do |wire_version|
         @coll.remove
-        @coll.ensure_index(BSON::OrderedHash[:a, Mongo::ASCENDING], {:unique => true})
+        @coll.ensure_index(BSONV1::OrderedHash[:a, Mongo::ASCENDING], {:unique => true})
         bulk = @coll.initialize_unordered_bulk_op
         bulk.insert({:a => 1})
         bulk.find({:a => 2}).upsert.update({'$set' => {:a => 1}})

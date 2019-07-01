@@ -51,7 +51,7 @@ module Mongo
       write_concern_errors = []
       exchanges = []
       serialized_doc = nil
-      message = BSON::ByteBuffer.new("", max_message_size)
+      message = BSONV1::ByteBuffer.new("", max_message_size)
       @max_write_batch_size = @collection.db.connection.max_write_batch_size
       docs = documents.dup
       catch(:error) do
@@ -62,8 +62,8 @@ module Mongo
             begin
               doc = docs.first
               doc = doc[:d] if op_type == :insert && !ordered.nil? #check_keys for :update outside of serialize
-              serialized_doc ||= BSON::BSON_CODER.serialize(doc, check_keys, true, max_serialize_size)
-            rescue BSON::InvalidDocument, BSON::InvalidKeyName, BSON::InvalidStringEncoding => ex
+              serialized_doc ||= BSONV1::BSON_CODER.serialize(doc, check_keys, true, max_serialize_size)
+            rescue BSONV1::InvalidDocument, BSONV1::InvalidKeyName, BSONV1::InvalidStringEncoding => ex
               bulk_message = "Bulk write error - #{ex.message} - examine result for complete information"
               ex = BulkWriteError.new(bulk_message, Mongo::ErrorCode::INVALID_BSON,
                                       {:op_type => op_type, :serialize => doc, :ord => docs.first[:ord], :error => ex}) unless ordered.nil?
@@ -120,7 +120,7 @@ module Mongo
           docs = docs.drop(batch.size)
           @write_batch_size = [(@write_batch_size*1097) >> 10, @write_batch_size+1].max unless docs.empty? # 2**(1/10) multiplicative increase
           @write_batch_size = @max_write_batch_size if @write_batch_size > @max_write_batch_size
-        rescue BSON::InvalidDocument, BSON::InvalidKeyName, BSON::InvalidStringEncoding => ex
+        rescue BSONV1::InvalidDocument, BSONV1::InvalidKeyName, BSONV1::InvalidStringEncoding => ex
           if @write_batch_size > 1 # decrease batch size
             @write_batch_size = (@write_batch_size+1) >> 1 # 2**(-1) multiplicative decrease
             next
@@ -157,8 +157,8 @@ module Mongo
           if check_keys
             doc.each_key do |key|
               key = key.to_s
-              raise BSON::InvalidKeyName.new("key #{key} must not start with '$'") if key[0] == ?$
-              raise BSON::InvalidKeyName.new("key #{key} must not contain '.'") if key.include? ?.
+              raise BSONV1::InvalidKeyName.new("key #{key} must not start with '$'") if key[0] == ?$
+              raise BSONV1::InvalidKeyName.new("key #{key} must not contain '.'") if key.include? ?.
             end
           end
         end
@@ -167,7 +167,7 @@ module Mongo
       #else
       #  raise ArgumentError, "Write operation type must be :insert, :update or :delete"
       end
-      request = BSON::OrderedHash[op_type, collection_name].merge!(
+      request = BSONV1::OrderedHash[op_type, collection_name].merge!(
           Mongo::CollectionWriter::WRITE_COMMAND_ARG_KEY[op_type] => documents,
           :writeConcern => get_write_concern(opts, @collection),
           :ordered => opts[:ordered] || !opts[:continue_on_error]
@@ -201,9 +201,9 @@ module Mongo
     end
 
     def send_write_operation(op_type, selector, doc_or_docs, check_keys, opts, write_concern, collection_name=@name)
-      message = BSON::ByteBuffer.new("", @connection.max_message_size)
+      message = BSONV1::ByteBuffer.new("", @connection.max_message_size)
       message.put_int((op_type == :insert && !!opts[:continue_on_error]) ? 1 : 0)
-      BSON::BSON_RUBY.serialize_cstr(message, "#{@db.name}.#{collection_name}")
+      BSONV1::BSON_RUBY.serialize_cstr(message, "#{@db.name}.#{collection_name}")
       if op_type == :update
         update_options  = 0
         update_options += 1 if opts[:upsert]
@@ -214,11 +214,11 @@ module Mongo
         delete_options += 1 if opts[:limit] && opts[:limit] != 0
         message.put_int(delete_options)
       end
-      message.put_binary(BSON::BSON_CODER.serialize(selector, false, true, @connection.max_bson_size).to_s) if selector
+      message.put_binary(BSONV1::BSON_CODER.serialize(selector, false, true, @connection.max_bson_size).to_s) if selector
       [doc_or_docs].flatten(1).compact.each do |document|
-        message.put_binary(BSON::BSON_CODER.serialize(document, check_keys, true, @connection.max_bson_size).to_s)
+        message.put_binary(BSONV1::BSON_CODER.serialize(document, check_keys, true, @connection.max_bson_size).to_s)
         if message.size > @connection.max_message_size
-          raise BSON::InvalidDocument, "Message is too large. This message is limited to #{@connection.max_message_size} bytes."
+          raise BSONV1::InvalidDocument, "Message is too large. This message is limited to #{@connection.max_message_size} bytes."
         end
       end
       instrument(op_type, :database => @db.name, :collection => collection_name, :selector => selector, :documents => doc_or_docs) do
@@ -245,7 +245,7 @@ module Mongo
         begin  # use single and NOT batch inserts since there no index for an error
           response = @collection.operation_writer.send_write_operation(op_type, q, d || u, check_keys = false, doc_opts, write_concern)
           exchanges << {:op_type => op_type, :batch => [doc], :opts => opts, :response => response}
-        rescue BSON::InvalidDocument, BSON::InvalidKeyName, BSON::InvalidStringEncoding => ex
+        rescue BSONV1::InvalidDocument, BSONV1::InvalidKeyName, BSONV1::InvalidStringEncoding => ex
           bulk_message = "Bulk write error - #{ex.message} - examine result for complete information"
           ex = BulkWriteError.new(bulk_message, Mongo::ErrorCode::INVALID_BSON,
                                   {:op_type => op_type, :serialize => doc, :ord => doc[:ord], :error => ex})
@@ -268,7 +268,7 @@ module Mongo
     def batch_message_initialize(message, op_type, continue_on_error, write_concern)
       message.clear!.clear
       message.put_int(continue_on_error ? 1 : 0)
-      BSON::BSON_RUBY.serialize_cstr(message, "#{@db.name}.#{@name}")
+      BSONV1::BSON_RUBY.serialize_cstr(message, "#{@db.name}.#{@name}")
     end
 
     def batch_message_append(message, serialized_doc, write_concern)
@@ -307,7 +307,7 @@ module Mongo
       else
         raise ArgumentError, "Write operation type must be :insert, :update or :delete"
       end
-      request = BSON::OrderedHash[op_type, collection_name, WRITE_COMMAND_ARG_KEY[op_type], argument]
+      request = BSONV1::OrderedHash[op_type, collection_name, WRITE_COMMAND_ARG_KEY[op_type], argument]
       request.merge!(:writeConcern => write_concern, :ordered => !opts[:continue_on_error])
       request.merge!(opts)
       instrument(op_type, :database => @db.name, :collection => collection_name, :selector => selector, :documents => doc_or_docs) do
@@ -336,7 +336,7 @@ module Mongo
 
     def batch_message_initialize(message, op_type, continue_on_error, write_concern)
       message.clear!.clear
-      @bson_empty ||= BSON::BSON_CODER.serialize({})
+      @bson_empty ||= BSONV1::BSON_CODER.serialize({})
       message.put_binary(@bson_empty.to_s)
       message.unfinish!.array!(WRITE_COMMAND_ARG_KEY[op_type])
     end
@@ -347,7 +347,7 @@ module Mongo
 
     def batch_message_send(message, op_type, batch_docs, write_concern, continue_on_error)
       message.finish!
-      request = BSON::OrderedHash[op_type, @name, :bson, message]
+      request = BSONV1::OrderedHash[op_type, @name, :bson, message]
       request.merge!(:writeConcern => write_concern, :ordered => !continue_on_error)
       instrument(:insert, :database => @db.name, :collection => @name, :documents => batch_docs) do
         @db.command(request)

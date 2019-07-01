@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'bson/grow'
+require 'bsonv1/grow'
 
-module BSON
+module BSONV1
   class ByteBuffer
-    include BSON::Grow
+    include BSONV1::Grow
 
     attr_reader :order, :max_size
 
@@ -32,7 +32,7 @@ module BSON
           else
             initial_data
           end
-        when BSON::ByteBuffer then
+        when BSONV1::ByteBuffer then
           initial_data.to_a.pack('C*')
         else
           initial_data.pack('C*')

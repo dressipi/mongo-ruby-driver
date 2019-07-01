@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-module BSON
+module BSONV1
   module Grow
     # module with methods to grow BSON docs/objects/arrays
     # this module is intended for internal use and is subject to change
@@ -48,7 +48,7 @@ module BSON
 
     def unfinish! # Backup past terminating null bytes
       @b_pos ||= [0]
-      @cursor = @str.size - @b_pos.size # BSON::BSON_CODER.serialize may not restore @cursor
+      @cursor = @str.size - @b_pos.size # BSONV1::BSON_CODER.serialize may not restore @cursor
       self
     end
 
@@ -94,7 +94,7 @@ module BSON
     def push_doc!(bson) # Appends BSON doc with correct key unfinished
       @a_index ||= [0]
       @b_pos ||= [0]
-      put(BSON::BSON_RUBY::OBJECT)
+      put(BSONV1::BSON_RUBY::OBJECT)
       put_binary(@a_index[-1].to_s)
       put(0)
       @a_index[-1] += 1
@@ -105,7 +105,7 @@ module BSON
     def push_doc(bson) # Appends BSON doc with correct key finished
       @a_index ||= [0]
       @b_pos ||= [0]
-      put(BSON::BSON_RUBY::OBJECT, @str.size - @b_pos.size)
+      put(BSONV1::BSON_RUBY::OBJECT, @str.size - @b_pos.size)
       put_binary(@a_index[-1].to_s)
       put(0)
       @a_index[-1] += 1
@@ -113,9 +113,9 @@ module BSON
       finish!
     end
 
-    def b_do!(key, type = BSON::BSON_RUBY::OBJECT) # Append object/array element unfinished
+    def b_do!(key, type = BSONV1::BSON_RUBY::OBJECT) # Append object/array element unfinished
       put(type)
-      BSON::BSON_RUBY.serialize_cstr(self, key)
+      BSONV1::BSON_RUBY.serialize_cstr(self, key)
       @b_pos ||= [0]
       @a_index ||= [0]
       @b_pos << @cursor # mark position of size
@@ -124,7 +124,7 @@ module BSON
       self
     end
 
-    def b_do(key, type = BSON::BSON_RUBY::OBJECT) # Append object/array element finished
+    def b_do(key, type = BSONV1::BSON_RUBY::OBJECT) # Append object/array element finished
       @b_pos ||= [0]
       @cursor = @str.size - @b_pos.size
       b_do!(key, type)
@@ -132,19 +132,19 @@ module BSON
     end
 
     def doc!(key) # Append object element unfinished
-      b_do!(key, BSON::BSON_RUBY::OBJECT)
+      b_do!(key, BSONV1::BSON_RUBY::OBJECT)
     end
 
     def doc(key) # Append object element finished
-      b_do(key, BSON::BSON_RUBY::OBJECT)
+      b_do(key, BSONV1::BSON_RUBY::OBJECT)
     end
 
     def array!(key) # Append array element unfinished
-      b_do!(key, BSON::BSON_RUBY::ARRAY)
+      b_do!(key, BSONV1::BSON_RUBY::ARRAY)
     end
 
     def array(key) # Append array element finished
-      b_do(key, BSON::BSON_RUBY::ARRAY)
+      b_do(key, BSONV1::BSON_RUBY::ARRAY)
     end
 
     def b_end! # End object/array unfinished - next operation will be up one level

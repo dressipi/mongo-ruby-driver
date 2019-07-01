@@ -113,7 +113,7 @@ module Mongo
         @tag_sets           = opts.fetch(:tag_sets, @db.tag_sets)
         @acceptable_latency = opts.fetch(:acceptable_latency, @db.acceptable_latency)
       end
-      @pk_factory = pk_factory || opts[:pk] || BSON::ObjectId
+      @pk_factory = pk_factory || opts[:pk] || BSONV1::ObjectId
       @hint = nil
       @operation_writer = CollectionOperationWriter.new(self)
       @command_writer = CollectionCommandWriter.new(self)
@@ -317,7 +317,7 @@ module Mongo
       spec = case spec_or_object_id
              when nil
                {}
-             when BSON::ObjectId
+             when BSONV1::ObjectId
                {:_id => spec_or_object_id}
              when Hash
                spec_or_object_id
@@ -657,7 +657,7 @@ module Mongo
     def find_and_modify(opts={})
       full_response = opts.delete(:full_response)
 
-      cmd = BSON::OrderedHash.new
+      cmd = BSONV1::OrderedHash.new
       cmd[:findandmodify] = @name
       cmd.merge!(opts)
 
@@ -712,7 +712,7 @@ module Mongo
       raise MongoArgumentError, "pipeline must be an array of operators" unless pipeline.class == Array
       raise MongoArgumentError, "pipeline operators must be hashes" unless pipeline.all? { |op| op.class == Hash }
 
-      selector = BSON::OrderedHash.new
+      selector = BSONV1::OrderedHash.new
       selector['aggregate'] = self.name
       selector['pipeline'] = pipeline
 
@@ -776,11 +776,11 @@ module Mongo
     # @see http://www.mongodb.org/display/DOCS/MapReduce Offical MongoDB map/reduce documentation.
     def map_reduce(map, reduce, opts={})
       opts = opts.dup
-      map    = BSON::Code.new(map) unless map.is_a?(BSON::Code)
-      reduce = BSON::Code.new(reduce) unless reduce.is_a?(BSON::Code)
+      map    = BSONV1::Code.new(map) unless map.is_a?(BSONV1::Code)
+      reduce = BSONV1::Code.new(reduce) unless reduce.is_a?(BSONV1::Code)
       raw    = opts.delete(:raw)
 
-      hash = BSON::OrderedHash.new
+      hash = BSONV1::OrderedHash.new
       hash['mapreduce'] = self.name
       hash['map'] = map
       hash['reduce'] = reduce
@@ -795,7 +795,7 @@ module Mongo
       if raw
         result
       elsif result['result']
-        if result['result'].is_a?(BSON::OrderedHash) &&
+        if result['result'].is_a?(BSONV1::OrderedHash) &&
             result['result'].key?('db') &&
             result['result'].key?('collection')
           otherdb = @db.connection[result['result']['db']]
@@ -841,7 +841,7 @@ module Mongo
       warn "Collection#group no longer takes a list of parameters. This usage is deprecated and will be removed in v2.0." +
              "Check out the new API at http://api.mongodb.org/ruby/current/Mongo/Collection.html#group-instance_method"
 
-      reduce = BSON::Code.new(reduce) unless reduce.is_a?(BSON::Code)
+      reduce = BSONV1::Code.new(reduce) unless reduce.is_a?(BSONV1::Code)
 
       group_command = {
         "group" => {
@@ -859,14 +859,14 @@ module Mongo
           opts.each { |k| key_value[k] = 1 }
         else
           key_type  = "$keyf"
-          key_value = opts.is_a?(BSON::Code) ? opts : BSON::Code.new(opts)
+          key_value = opts.is_a?(BSONV1::Code) ? opts : BSONV1::Code.new(opts)
         end
 
         group_command["group"][key_type] = key_value
       end
 
-      finalize = BSON::Code.new(finalize) if finalize.is_a?(String)
-      if finalize.is_a?(BSON::Code)
+      finalize = BSONV1::Code.new(finalize) if finalize.is_a?(String)
+      if finalize.is_a?(BSONV1::Code)
         group_command['group']['finalize'] = finalize
       end
 
@@ -890,7 +890,7 @@ module Mongo
     #
     # @return [Array] An array of up to num_cursors cursors for iterating over the collection.
     def parallel_scan(num_cursors, opts={})
-      cmd                          = BSON::OrderedHash.new
+      cmd                          = BSONV1::OrderedHash.new
       cmd[:parallelCollectionScan] = self.name
       cmd[:numCursors]             = num_cursors
       result                       = @db.command(cmd, command_options(opts))
@@ -984,7 +984,7 @@ module Mongo
     # @return [Array] an array of distinct values.
     def distinct(key, query=nil, opts={})
       raise MongoArgumentError unless [String, Symbol].include?(key.class)
-      command            = BSON::OrderedHash.new
+      command            = BSONV1::OrderedHash.new
       command[:distinct] = @name
       command[:key]      = key.to_s
       command[:query]    = query
@@ -1090,7 +1090,7 @@ module Mongo
       when nil
         nil
       else
-        h = BSON::OrderedHash.new
+        h = BSONV1::OrderedHash.new
         hint.to_a.each { |k| h[k] = 1 }
         h
       end
@@ -1116,15 +1116,15 @@ module Mongo
     end
 
     def parse_index_spec(spec)
-      field_spec = BSON::OrderedHash.new
+      field_spec = BSONV1::OrderedHash.new
       if spec.is_a?(String) || spec.is_a?(Symbol)
         field_spec[spec.to_s] = 1
       elsif spec.is_a?(Hash)
-        if RUBY_VERSION < '1.9' && !spec.is_a?(BSON::OrderedHash)
+        if RUBY_VERSION < '1.9' && !spec.is_a?(BSONV1::OrderedHash)
           raise MongoArgumentError, "Must use OrderedHash in Ruby < 1.9.0"
         end
         validate_index_types(spec.values)
-        field_spec = spec.is_a?(BSON::OrderedHash) ? spec : BSON::OrderedHash.try_convert(spec)
+        field_spec = spec.is_a?(BSONV1::OrderedHash) ? spec : BSONV1::OrderedHash.try_convert(spec)
       elsif spec.is_a?(Array) && spec.all? {|field| field.is_a?(Array) }
         spec.each do |f|
           validate_index_types(f[1])
@@ -1155,7 +1155,7 @@ module Mongo
       selector.merge!(opts)
 
       begin
-        cmd = BSON::OrderedHash[:createIndexes, @name, :indexes, [selector]]
+        cmd = BSONV1::OrderedHash[:createIndexes, @name, :indexes, [selector]]
         @db.command(cmd)
       rescue Mongo::OperationFailure => ex
         if Mongo::ErrorCode::COMMAND_NOT_FOUND_CODES.include?(ex.error_code)

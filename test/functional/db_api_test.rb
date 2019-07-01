@@ -41,8 +41,8 @@ class DBAPITest < Test::Unit::TestCase
   end
 
   def test_insert
-    assert_kind_of BSON::ObjectId, @coll.insert('a' => 2)
-    assert_kind_of BSON::ObjectId, @coll.insert('b' => 3)
+    assert_kind_of BSONV1::ObjectId, @coll.insert('a' => 2)
+    assert_kind_of BSONV1::ObjectId, @coll.insert('b' => 3)
 
     assert_equal 3, @coll.count
     docs = @coll.find().to_a
@@ -58,14 +58,14 @@ class DBAPITest < Test::Unit::TestCase
   end
 
   def test_save_ordered_hash
-    oh = BSON::OrderedHash.new
+    oh = BSONV1::OrderedHash.new
     oh['a'] = -1
     oh['b'] = 'foo'
 
     oid = @coll.save(oh)
     assert_equal 'foo', @coll.find_one(oid)['b']
 
-    oh = BSON::OrderedHash['a' => 1, 'b' => 'foo']
+    oh = BSONV1::OrderedHash['a' => 1, 'b' => 'foo']
     oid = @coll.save(oh)
     assert_equal 'foo', @coll.find_one(oid)['b']
   end
@@ -74,7 +74,7 @@ class DBAPITest < Test::Unit::TestCase
     ids = @coll.insert([{'a' => 2}, {'b' => 3}])
 
     ids.each do |i|
-      assert_kind_of BSON::ObjectId, i
+      assert_kind_of BSONV1::ObjectId, i
     end
 
     assert_equal 3, @coll.count
@@ -208,7 +208,7 @@ class DBAPITest < Test::Unit::TestCase
     @coll.insert('a' => 3, 'b' => 2)
     @coll.insert('a' => 4, 'b' => 1)
 
-    oh = BSON::OrderedHash.new
+    oh = BSONV1::OrderedHash.new
     oh['a'] = -1
 
     # Sort as a method
@@ -551,8 +551,8 @@ HERE
     @coll.insert('a' => 3)
 
     assert_equal 3, @coll.count
-    assert_equal 1, @coll.find('$where' => BSON::Code.new('this.a > 2')).count()
-    assert_equal 2, @coll.find('$where' => BSON::Code.new('this.a > i', {'i' => 1})).count()
+    assert_equal 1, @coll.find('$where' => BSONV1::Code.new('this.a > 2')).count()
+    assert_equal 2, @coll.find('$where' => BSONV1::Code.new('this.a > i', {'i' => 1})).count()
   end
 
   def test_eval

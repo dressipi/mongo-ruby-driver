@@ -248,7 +248,7 @@ module Mongo
     #
     # @return [BSON::OrderedHash] the command response
     def lock!
-      cmd = BSON::OrderedHash.new
+      cmd = BSONV1::OrderedHash.new
       cmd[:fsync] = 1
       cmd[:lock]  = true
       self['admin'].command(cmd)

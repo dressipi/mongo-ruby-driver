@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-module BSON
+module BSONV1
 
   # generates a wrapped Regexp with lazy compilation.
   # can represent flags not supported in Ruby's core Regexp class before compilation.
@@ -42,7 +42,7 @@ module BSON
     #
     # @param [BSON::Regex] regexp
     def eql?(regexp)
-      regexp.kind_of?(BSON::Regex) &&
+      regexp.kind_of?(BSONV1::Regex) &&
         self.pattern == regexp.pattern &&
         self.options == regexp.options
     end

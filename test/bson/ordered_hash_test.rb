@@ -17,7 +17,7 @@ require 'test_helper'
 class OrderedHashTest < Test::Unit::TestCase
 
   def setup
-    @oh = BSON::OrderedHash.new
+    @oh = BSONV1::OrderedHash.new
     @oh['c'] = 1
     @oh['a'] = 2
     @oh['z'] = 3
@@ -25,31 +25,31 @@ class OrderedHashTest < Test::Unit::TestCase
   end
 
   def test_initialize
-    a = BSON::OrderedHash.new
+    a = BSONV1::OrderedHash.new
     a['x'] = 1
     a['y'] = 2
 
-    b = BSON::OrderedHash['x', 1, 'y', 2]
+    b = BSONV1::OrderedHash['x', 1, 'y', 2]
     assert_equal a, b
   end
 
   def test_hash_code
-    o = BSON::OrderedHash.new
+    o = BSONV1::OrderedHash.new
     o['number'] = 50
     assert o.hash
   end
 
   def test_empty
-    assert_equal [], BSON::OrderedHash.new.keys
+    assert_equal [], BSONV1::OrderedHash.new.keys
   end
 
   def test_uniq
     list = []
-    doc  = BSON::OrderedHash.new
+    doc  = BSONV1::OrderedHash.new
     doc['_id']  = 'ab12'
     doc['name'] = 'test'
 
-    same_doc = BSON::OrderedHash.new
+    same_doc = BSONV1::OrderedHash.new
     same_doc['_id']  = 'ab12'
     same_doc['name'] = 'test'
 
@@ -63,7 +63,7 @@ class OrderedHashTest < Test::Unit::TestCase
   if !(RUBY_VERSION =~ /1.8.6/)
     def test_compatibility_with_hash
       list = []
-      doc  = BSON::OrderedHash.new
+      doc  = BSONV1::OrderedHash.new
       doc['_id']  = 'ab12'
       doc['name'] = 'test'
 
@@ -78,23 +78,23 @@ class OrderedHashTest < Test::Unit::TestCase
   end
 
   def test_equality
-    a = BSON::OrderedHash.new
+    a = BSONV1::OrderedHash.new
     a['x'] = 1
     a['y'] = 2
 
-    b = BSON::OrderedHash.new
+    b = BSONV1::OrderedHash.new
     b['y'] = 2
     b['x'] = 1
 
-    c = BSON::OrderedHash.new
+    c = BSONV1::OrderedHash.new
     c['x'] = 1
     c['y'] = 2
 
-    d = BSON::OrderedHash.new
+    d = BSONV1::OrderedHash.new
     d['x'] = 2
     d['y'] = 3
 
-    e = BSON::OrderedHash.new
+    e = BSONV1::OrderedHash.new
     e['z'] = 1
     e['y'] = 2
 
@@ -109,11 +109,11 @@ class OrderedHashTest < Test::Unit::TestCase
   end
 
   def test_replace
-    h1 = BSON::OrderedHash.new
+    h1 = BSONV1::OrderedHash.new
     h1[:a] = 1
     h1[:b] = 2
 
-    h2 = BSON::OrderedHash.new
+    h2 = BSONV1::OrderedHash.new
     h2[:c] = 3
     h2[:d] = 4
     h1.replace(h2)
@@ -152,7 +152,7 @@ class OrderedHashTest < Test::Unit::TestCase
   end
 
   def test_merge
-    other = BSON::OrderedHash.new
+    other = BSONV1::OrderedHash.new
     other['f'] = 'foo'
     noob = @oh.merge(other)
     assert_equal @ordered_keys + ['f'], noob.keys
@@ -160,7 +160,7 @@ class OrderedHashTest < Test::Unit::TestCase
   end
 
   def test_merge_bang
-    other = BSON::OrderedHash.new
+    other = BSONV1::OrderedHash.new
     other['f'] = 'foo'
     @oh.merge!(other)
     assert_equal @ordered_keys + ['f'], @oh.keys
@@ -168,7 +168,7 @@ class OrderedHashTest < Test::Unit::TestCase
   end
 
   def test_merge_bang_with_overlap
-    other = BSON::OrderedHash.new
+    other = BSONV1::OrderedHash.new
     other['a'] = 'apple'
     other['c'] = 'crab'
     other['f'] = 'foo'
@@ -188,7 +188,7 @@ class OrderedHashTest < Test::Unit::TestCase
   end
 
   def test_equality_with_hash
-    oh = BSON::OrderedHash.new
+    oh = BSONV1::OrderedHash.new
     oh[:a] = 1
     oh[:b] = 2
     oh[:c] = 3
@@ -198,7 +198,7 @@ class OrderedHashTest < Test::Unit::TestCase
   end
 
   def test_update
-    other = BSON::OrderedHash.new
+    other = BSONV1::OrderedHash.new
     other['f'] = 'foo'
     noob = @oh.update(other)
     assert_equal @ordered_keys + ['f'], noob.keys
@@ -207,7 +207,7 @@ class OrderedHashTest < Test::Unit::TestCase
 
   if RUBY_VERSION < "1.9.2"
     def test_inspect_retains_order
-      assert_equal "#<BSON::OrderedHash:0x#{@oh.object_id.to_s(16)} {\"c\"=>1, \"a\"=>2, \"z\"=>3}>", @oh.inspect
+      assert_equal "#<BSONV1::OrderedHash:0x#{@oh.object_id.to_s(16)} {\"c\"=>1, \"a\"=>2, \"z\"=>3}>", @oh.inspect
     end
   end
 
@@ -236,7 +236,7 @@ class OrderedHashTest < Test::Unit::TestCase
 
     new2 = @oh.reject { |k, v| k == 'z' }
     assert !new2.keys.include?('z')
-    assert_instance_of BSON::OrderedHash, new2
+    assert_instance_of BSONV1::OrderedHash, new2
   end
 
   def test_reject_bang
@@ -267,7 +267,7 @@ class OrderedHashTest < Test::Unit::TestCase
     new2 = @oh.select { |k, v| k == 'a' }
     assert new2.keys.include?('a')
     assert !new2.keys.include?('z')
-    assert_instance_of BSON::OrderedHash, new2
+    assert_instance_of BSONV1::OrderedHash, new2
   end
 
   def test_select_as_enum
@@ -296,10 +296,10 @@ class OrderedHashTest < Test::Unit::TestCase
   end
 
   # Extractable_options should not be enabled by default for
-  # classes inherited from BSON::OrderedHash
+  # classes inherited from BSONV1::OrderedHash
   #
   def test_extractable_options_for_ordered_hash_inherited_classes_is_false
-    oh_child_class = Class.new(BSON::OrderedHash)
+    oh_child_class = Class.new(BSONV1::OrderedHash)
     assert_false oh_child_class.new.extractable_options?
   end
 end

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # A thin wrapper for the BSON C-Extension
-module BSON
+module BSONV1
   class BSON_C
 
     def self.serialize(obj, check_keys=false, move_id=false, max_bson_size=DEFAULT_MAX_BSON_SIZE)

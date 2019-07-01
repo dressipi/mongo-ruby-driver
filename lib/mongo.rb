@@ -75,7 +75,7 @@ module Mongo
   end
 end
 
-require 'bson'
+require 'bsonv1'
 
 require 'set'
 require 'thread'

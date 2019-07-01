@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'bson/byte_buffer'
+require 'bsonv1/byte_buffer'
 
-module BSON
+module BSONV1
 
   # An array of binary bytes with a MongoDB subtype. See the subtype
   # constants for reference.

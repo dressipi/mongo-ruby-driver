@@ -235,26 +235,26 @@ module Mongo
         size = buf.unpack('V')[0]
         buf << receive_message_on_socket(size - 4, sock)
         number_remaining -= 1
-        docs << BSON::BSON_CODER.deserialize(buf, opts)
+        docs << BSONV1::BSON_CODER.deserialize(buf, opts)
       end
       [docs, number_received]
     end
 
     def build_command_message(db_name, query, projection=nil, skip=0, limit=-1)
-      message = BSON::ByteBuffer.new("", max_message_size)
+      message = BSONV1::ByteBuffer.new("", max_message_size)
       message.put_int(0)
-      BSON::BSON_RUBY.serialize_cstr(message, "#{db_name}.$cmd")
+      BSONV1::BSON_RUBY.serialize_cstr(message, "#{db_name}.$cmd")
       message.put_int(skip)
       message.put_int(limit)
-      message.put_binary(BSON::BSON_CODER.serialize(query, false, false, max_bson_size).to_s)
-      message.put_binary(BSON::BSON_CODER.serialize(projection, false, false, max_bson_size).to_s) if projection
+      message.put_binary(BSONV1::BSON_CODER.serialize(query, false, false, max_bson_size).to_s)
+      message.put_binary(BSONV1::BSON_CODER.serialize(projection, false, false, max_bson_size).to_s) if projection
       message
     end
 
     # Constructs a getlasterror message. This method is used exclusively by
     # MongoClient#send_message_with_gle.
     def build_get_last_error_message(db_name, write_concern)
-      gle = BSON::OrderedHash.new
+      gle = BSONV1::OrderedHash.new
       gle[:getlasterror] = 1
       if write_concern.is_a?(Hash)
         write_concern.assert_valid_keys(:w, :wtimeout, :fsync, :j)

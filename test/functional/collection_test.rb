@@ -50,7 +50,7 @@ class CollectionTest < Test::Unit::TestCase
 
   def max_size_exception_cruby_test(client)
     [
-      [@@wv0, client.max_bson_size + 1, BSON::InvalidDocument,   /Document.* too large/]
+      [@@wv0, client.max_bson_size + 1, BSONV1::InvalidDocument,   /Document.* too large/]
     ]
   end
 
@@ -63,15 +63,15 @@ class CollectionTest < Test::Unit::TestCase
       #[@@wv2, client.max_bson_size,         nil,                     /xyzzy/], # succeeds standalone, fails whole suite
       [@@wv2, client.max_bson_size + 1,     Mongo::OperationFailure, /object to insert too large/],
       [@@wv2, client.max_bson_size + @@s_h, Mongo::OperationFailure, /object to insert too large/],
-      [@@wv2, client.max_bson_size + @@a_h, BSON::InvalidDocument,   /Document.* too large/]
+      [@@wv2, client.max_bson_size + @@a_h, BSONV1::InvalidDocument,   /Document.* too large/]
     ]
   end
 
   def generate_sized_doc(size)
-    doc = {"_id" => BSON::ObjectId.new, "x" => "y"}
-    serialize_doc = BSON::BSON_CODER.serialize(doc, false, false, size)
-    doc = {"_id" => BSON::ObjectId.new, "x" => "y" * (1 + size - serialize_doc.size)}
-    assert_equal size, BSON::BSON_CODER.serialize(doc, false, false, size).size
+    doc = {"_id" => BSONV1::ObjectId.new, "x" => "y"}
+    serialize_doc = BSONV1::BSON_CODER.serialize(doc, false, false, size)
+    doc = {"_id" => BSONV1::ObjectId.new, "x" => "y" * (1 + size - serialize_doc.size)}
+    assert_equal size, BSONV1::BSON_CODER.serialize(doc, false, false, size).size
     doc
   end
 
@@ -111,7 +111,7 @@ class CollectionTest < Test::Unit::TestCase
     @test.drop
     @test.insert([{ :a => 1 }, { :a => 1 }])
 
-    command = BSON::OrderedHash['delete', @test.name,
+    command = BSONV1::OrderedHash['delete', @test.name,
                                 :deletes, [{ :q => { :a => 1 }, :limit => 1 }],
                                 :writeConcern, { :w => 1 },
                                 :ordered, false]
@@ -127,7 +127,7 @@ class CollectionTest < Test::Unit::TestCase
     @test.drop
     @test.insert([{ :a => 1 }, { :a => 1 }])
 
-    command = BSON::OrderedHash['delete', @test.name,
+    command = BSONV1::OrderedHash['delete', @test.name,
                                 :deletes, [{ :q => { :a => 1 }, :limit => 0 }],
                                 :writeConcern, { :w => 1 },
                                 :ordered, true]
@@ -143,7 +143,7 @@ class CollectionTest < Test::Unit::TestCase
     @test.drop
     @test.insert([{ :a => 1 }, { :a => 1 }])
 
-    command = BSON::OrderedHash['delete', @test.name,
+    command = BSONV1::OrderedHash['delete', @test.name,
                                 :deletes, [{ :q => { :a => 1 }, :limit => 0 }],
                                 :writeConcern, { :w => 1 },
                                 :ordered, false]
@@ -159,7 +159,7 @@ class CollectionTest < Test::Unit::TestCase
     @test.drop
     @test.insert([{ :a => 1 }, { :a => 1 }])
 
-    command = BSON::OrderedHash['delete', @test.name,
+    command = BSONV1::OrderedHash['delete', @test.name,
                                 :deletes, [{ :q => { :a => 1 }, :limit => 0 }],
                                 :ordered, false]
 
@@ -174,7 +174,7 @@ class CollectionTest < Test::Unit::TestCase
     @test.drop
     @test.insert([{ :a => 1 }, { :a => 1 }])
 
-    command = BSON::OrderedHash['delete', @test.name,
+    command = BSONV1::OrderedHash['delete', @test.name,
                                 :deletes, [{ :q => { '$set' => { :a => 1 }}, :limit => 0 }],
                                 :writeConcern, { :w => 1 },
                                 :ordered, false]
@@ -188,7 +188,7 @@ class CollectionTest < Test::Unit::TestCase
     return unless @version >= '2.5.4'
     @test.drop
 
-    command = BSON::OrderedHash['insert', @test.name,
+    command = BSONV1::OrderedHash['insert', @test.name,
                                 :documents, [{ :a => 1 }],
                                 :writeConcern, { :w => 1 },
                                 :ordered, false]
@@ -202,7 +202,7 @@ class CollectionTest < Test::Unit::TestCase
     return unless @version >= '2.5.4'
     @test.drop
 
-    command = BSON::OrderedHash['insert', @test.name,
+    command = BSONV1::OrderedHash['insert', @test.name,
                                 :documents, [{ :a => 1 }, { :a => 2 }],
                                 :writeConcern, { :w => 1 },
                                 :ordered, true]
@@ -216,7 +216,7 @@ class CollectionTest < Test::Unit::TestCase
     return unless @version >= '2.5.4'
     @test.drop
 
-    command = BSON::OrderedHash['insert', @test.name,
+    command = BSONV1::OrderedHash['insert', @test.name,
                                 :documents, [{ :a => 1 }, { :a => 2 }],
                                 :writeConcern, { :w => 1 },
                                 :ordered, false]
@@ -230,7 +230,7 @@ class CollectionTest < Test::Unit::TestCase
     return unless @version >= '2.5.4'
     @test.drop
 
-    command = BSON::OrderedHash['insert', @test.name,
+    command = BSONV1::OrderedHash['insert', @test.name,
                                 :documents, [{ :a => 1 }, { :a => 2 }],
                                 :ordered, false]
 
@@ -244,7 +244,7 @@ class CollectionTest < Test::Unit::TestCase
     @test.drop
     @test.ensure_index([[:a, 1]], { :unique => true })
 
-    command = BSON::OrderedHash['insert', @test.name,
+    command = BSONV1::OrderedHash['insert', @test.name,
                                 :documents, [{ :a => 1 }, { :a => 1 }],
                                 :writeConcern, { :w => 1 },
                                 :ordered, false]
@@ -259,7 +259,7 @@ class CollectionTest < Test::Unit::TestCase
     @test.drop
     @test.insert([{ :a => 1 }, { :a => 2 }])
 
-    command = BSON::OrderedHash['update', @test.name,
+    command = BSONV1::OrderedHash['update', @test.name,
                                 :updates, [{ :q => { :a => 1 }, :u => { '$set' => { :a => 2 }}}],
                                 :writeConcern, { :w => 1 }]
 
@@ -274,7 +274,7 @@ class CollectionTest < Test::Unit::TestCase
     @test.drop
     @test.insert([{ :a => 1 }, { :a => 3 }])
 
-    command = BSON::OrderedHash['update', @test.name,
+    command = BSONV1::OrderedHash['update', @test.name,
                                 :updates, [
                                             { :q => { :a => 1 }, :u => { '$set' => { :a => 2 }}},
                                             { :q => { :a => 3 }, :u => { '$set' => { :a => 4 }}}
@@ -294,7 +294,7 @@ class CollectionTest < Test::Unit::TestCase
     @test.drop
     @test.insert([{ :a => 1 }, { :a => 3 }])
 
-    command = BSON::OrderedHash['update', @test.name,
+    command = BSONV1::OrderedHash['update', @test.name,
                                 :updates, [
                                             { :q => { :a => 1 }, :u => { '$set' => { :a => 2 }}},
                                             { :q => { :a => 3 }, :u => { '$set' => { :a => 4 }}}
@@ -314,7 +314,7 @@ class CollectionTest < Test::Unit::TestCase
     @test.drop
     @test.insert([{ :a => 1 }, { :a => 3 }])
 
-    command = BSON::OrderedHash['update', @test.name,
+    command = BSONV1::OrderedHash['update', @test.name,
                                 :updates, [
                                             { :q => { :a => 1 }, :u => { '$set' => { :a => 2 }}},
                                             { :q => { :a => 3 }, :u => { '$set' => { :a => 4 }}}
@@ -334,7 +334,7 @@ class CollectionTest < Test::Unit::TestCase
     @test.ensure_index([[:a, 1]], { :unique => true })
     @test.insert([{ :a => 1 }, { :a => 2 }])
 
-    command = BSON::OrderedHash['update', @test.name,
+    command = BSONV1::OrderedHash['update', @test.name,
                                 :updates, [
                                             { :q => { :a => 2 }, :u => { '$set' => { :a => 1 }}}
                                           ],
@@ -347,7 +347,7 @@ class CollectionTest < Test::Unit::TestCase
 
   def test_error_code
     coll = @db['test-error-code']
-    coll.ensure_index(BSON::OrderedHash[:x, Mongo::ASCENDING], { :unique => true })
+    coll.ensure_index(BSONV1::OrderedHash[:x, Mongo::ASCENDING], { :unique => true })
     coll.save(:x => 2)
     begin
       coll.save(:x => 2)
@@ -431,9 +431,9 @@ class CollectionTest < Test::Unit::TestCase
 
   def test_optional_pk_factory
     @coll_default_pk = @db.collection('stuff')
-    assert_equal BSON::ObjectId, @coll_default_pk.pk_factory
+    assert_equal BSONV1::ObjectId, @coll_default_pk.pk_factory
     @coll_default_pk = @db.create_collection('more-stuff')
-    assert_equal BSON::ObjectId, @coll_default_pk.pk_factory
+    assert_equal BSONV1::ObjectId, @coll_default_pk.pk_factory
 
     # Create a db with a pk_factory.
     client = MongoClient.new(ENV['MONGO_RUBY_DRIVER_HOST'] || 'localhost',
@@ -575,7 +575,7 @@ class CollectionTest < Test::Unit::TestCase
     docs << {:foo => 3}
     response = @test.insert(docs)
     assert_equal 3, response.length
-    assert response.all? {|id| id.is_a?(BSON::ObjectId)}
+    assert response.all? {|id| id.is_a?(BSONV1::ObjectId)}
     assert_equal 3, @test.count
   end
 
@@ -629,7 +629,7 @@ class CollectionTest < Test::Unit::TestCase
     invalid_docs << {'$invalid-key' => 1}
     invalid_docs << {'invalid.key'  => 1}
     docs += invalid_docs
-    assert_raise BSON::InvalidKeyName do
+    assert_raise BSONV1::InvalidKeyName do
       @test.insert(docs, :collect_on_error => false)
     end
     assert_equal 2, @test.count
@@ -650,7 +650,7 @@ class CollectionTest < Test::Unit::TestCase
     invalid_docs << {"\223\372\226}" => 1} # non utf8 encoding
     docs += invalid_docs
 
-    assert_raise BSON::InvalidStringEncoding do
+    assert_raise BSONV1::InvalidStringEncoding do
       @test.insert(docs, :collect_on_error => false)
     end
     assert_equal 2, @test.count
@@ -728,7 +728,7 @@ class CollectionTest < Test::Unit::TestCase
     4.times do
       docs << {'foo' => 'a' * LIMITED_VALID_VALUE_SIZE}
     end
-    assert_raise BSON::InvalidKeyName do
+    assert_raise BSONV1::InvalidKeyName do
       limited_collection.insert(docs, :collect_on_error => false)
     end
   end
@@ -922,7 +922,7 @@ class CollectionTest < Test::Unit::TestCase
     @test.update({"x" => 1}, {"$set" => {"a.b" => 2}})
     assert_equal 2, @test.find_one("x" => 1)["a"]["b"]
 
-    assert_raise_error BSON::InvalidKeyName do
+    assert_raise_error BSONV1::InvalidKeyName do
       @test.update({"x" => 1}, {"a.b" => 3})
     end
   end
@@ -1030,7 +1030,7 @@ class CollectionTest < Test::Unit::TestCase
     @test.save(:i => 2)
     assert_equal 2, @test.count
 
-    @test.ensure_index(BSON::OrderedHash[:i, Mongo::ASCENDING])
+    @test.ensure_index(BSONV1::OrderedHash[:i, Mongo::ASCENDING])
 
     # Check that a named_hint can be specified
     assert_equal 1, @test.count(:query => { :i => 1 }, :named_hint => '_id_')
@@ -1054,7 +1054,7 @@ class CollectionTest < Test::Unit::TestCase
       assert_equal 1, @test.count(:query => { :i => 1 }, :named_hint => 'bad_hint')
     end
 
-    @test.ensure_index(BSON::OrderedHash[:x, Mongo::ASCENDING], :sparse => true)
+    @test.ensure_index(BSONV1::OrderedHash[:x, Mongo::ASCENDING], :sparse => true)
 
     # The sparse index won't have any entries.
     # Check that count returns 0 when using the hint.
@@ -1172,14 +1172,14 @@ class CollectionTest < Test::Unit::TestCase
     assert_equal @test.find_one(nil), @test.find_one()
     assert_equal @test.find_one({}), @test.find_one()
     assert_equal @test.find_one("hello" => "world"), @test.find_one()
-    assert_equal @test.find_one(BSON::OrderedHash["hello", "world"]), @test.find_one()
+    assert_equal @test.find_one(BSONV1::OrderedHash["hello", "world"]), @test.find_one()
 
     assert @test.find_one(nil, :fields => ["hello"]).include?("hello")
     assert !@test.find_one(nil, :fields => ["foo"]).include?("hello")
     assert_equal ["_id"], @test.find_one(nil, :fields => []).keys()
 
     assert_equal nil, @test.find_one("hello" => "foo")
-    assert_equal nil, @test.find_one(BSON::OrderedHash["hello", "foo"])
+    assert_equal nil, @test.find_one(BSONV1::OrderedHash["hello", "foo"])
     assert_equal nil, @test.find_one(ObjectId.new)
 
     assert_raise TypeError do
@@ -1200,7 +1200,7 @@ class CollectionTest < Test::Unit::TestCase
     @test.insert('r' => /.*/)
     assert_kind_of Regexp, @test.find_one({})['r']
     assert_kind_of Regexp, @test.find_one({}, :compile_regex => true)['r']
-    assert_equal BSON::Regex, @test.find_one({}, :compile_regex => false)['r'].class
+    assert_equal BSONV1::Regex, @test.find_one({}, :compile_regex => false)['r'].class
   end
 
   def test_insert_adds_id
@@ -1341,7 +1341,7 @@ class CollectionTest < Test::Unit::TestCase
 
   def test_aggregate_command_using_sym
     return unless @version > '2.1.1'
-    cmd = BSON::OrderedHash[:aggregate, @test.name, :pipeline, [{'$match' => {:_id => true}}]]
+    cmd = BSONV1::OrderedHash[:aggregate, @test.name, :pipeline, [{'$match' => {:_id => true}}]]
     assert @db.command(cmd)
   end
 
@@ -1390,11 +1390,11 @@ class CollectionTest < Test::Unit::TestCase
     assert_kind_of Regexp, result1.first['r']
 
     result2 = @test.aggregate([], :compile_regex => false)
-    assert_kind_of BSON::Regex, result2.first['r']
+    assert_kind_of BSONV1::Regex, result2.first['r']
 
     return unless @version >= '2.5.1'
     result = @test.aggregate([], :compile_regex => false, :cursor => {})
-    assert_kind_of BSON::Regex, result.first['r']
+    assert_kind_of BSONV1::Regex, result.first['r']
   end
 
   def test_out_aggregate
@@ -1540,7 +1540,7 @@ class CollectionTest < Test::Unit::TestCase
 
     m = Code.new("function() { emit(this.user_id, 1); }")
     r = Code.new("function(k,vals) { return 1; }")
-    oh = BSON::OrderedHash.new
+    oh = BSONV1::OrderedHash.new
     oh[:replace] = 'foo'
     oh[:db] = TEST_DB
     res = @test.map_reduce(m, r, :out => (oh))
@@ -2106,7 +2106,7 @@ class CollectionTest < Test::Unit::TestCase
     end
 
     should "generate indexes in the proper order" do
-      key = BSON::OrderedHash['b', 1, 'a', 1]
+      key = BSONV1::OrderedHash['b', 1, 'a', 1]
       if @version < '2.5.5'
         @collection.expects(:send_write) do |type, selector, documents, check_keys, opts, collection_name|
           assert_equal key, selector[:key]

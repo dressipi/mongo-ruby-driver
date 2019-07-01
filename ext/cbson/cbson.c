@@ -450,7 +450,7 @@ static int write_element(VALUE key, VALUE value, VALUE extra, int allow_id) {
         {
             // TODO there has to be a better way to do these checks...
             const char* cls = rb_obj_classname(value);
-            if (strcmp(cls, "BSON::Binary") == 0 ||
+            if (strcmp(cls, "BSONV1::Binary") == 0 ||
                 strcmp(cls, "ByteBuffer") == 0) {
                 VALUE string_data = rb_funcall(value, rb_intern("to_s"), 0);
                 int length = RSTRING_LENINT(string_data);
@@ -469,7 +469,7 @@ static int write_element(VALUE key, VALUE value, VALUE extra, int allow_id) {
                 SAFE_WRITE(buffer, RSTRING_PTR(string_data), length);
                 break;
             }
-            if (strcmp(cls, "BSON::ObjectId") == 0) {
+            if (strcmp(cls, "BSONV1::ObjectId") == 0) {
                 int i;
                 VALUE as_array = rb_funcall(value, rb_intern("to_a"), 0);
                 write_name_and_type(buffer, key, 0x07);
@@ -479,7 +479,7 @@ static int write_element(VALUE key, VALUE value, VALUE extra, int allow_id) {
                 }
                 break;
             }
-            if (strcmp(cls, "BSON::DBRef") == 0) {
+            if (strcmp(cls, "BSONV1::DBRef") == 0) {
                 bson_buffer_position length_location, start_position, obj_length;
                 VALUE ns, oid;
                 write_name_and_type(buffer, key, 0x03);
@@ -503,7 +503,7 @@ static int write_element(VALUE key, VALUE value, VALUE extra, int allow_id) {
                 SAFE_WRITE_AT_POS(buffer, length_location, (const char*)&obj_length, 4);
                 break;
             }
-            if (strcmp(cls, "BSON::Code") == 0) {
+            if (strcmp(cls, "BSONV1::Code") == 0) {
                 bson_buffer_position length_location, start_position, total_length;
                 int length;
                 VALUE code_str;
@@ -526,15 +526,15 @@ static int write_element(VALUE key, VALUE value, VALUE extra, int allow_id) {
                 SAFE_WRITE_AT_POS(buffer, length_location, (const char*)&total_length, 4);
                 break;
             }
-            if (strcmp(cls, "BSON::MaxKey") == 0) {
+            if (strcmp(cls, "BSONV1::MaxKey") == 0) {
                 write_name_and_type(buffer, key, 0x7f);
                 break;
             }
-            if (strcmp(cls, "BSON::MinKey") == 0) {
+            if (strcmp(cls, "BSONV1::MinKey") == 0) {
                 write_name_and_type(buffer, key, 0xff);
                 break;
             }
-            if (strcmp(cls, "BSON::Timestamp") == 0) {
+            if (strcmp(cls, "BSONV1::Timestamp") == 0) {
                 unsigned int seconds;
                 unsigned int increment;
 
@@ -569,7 +569,7 @@ static int write_element(VALUE key, VALUE value, VALUE extra, int allow_id) {
                 SAFE_WRITE(buffer, &zero, 1);
                 break;
             }
-            if (strcmp(cls, "BSON::Regex") == 0) {
+            if (strcmp(cls, "BSONV1::Regex") == 0) {
                 serialize_regex(buffer, key, rb_funcall(value, rb_intern("pattern"), 0),
                     FIX2INT(rb_funcall(value, rb_intern("options"), 0)), value, 0);
                 break;
@@ -674,7 +674,7 @@ static void write_doc(bson_buffer_t buffer, VALUE hash, VALUE check_keys, VALUE 
     }
 
     // we have to check for an OrderedHash and handle that specially
-    if (strcmp(rb_obj_classname(hash), "BSON::OrderedHash") == 0) {
+    if (strcmp(rb_obj_classname(hash), "BSONV1::OrderedHash") == 0) {
         int i;
         VALUE keys = rb_funcall(hash, rb_intern("keys"), 0);
 
@@ -1146,21 +1146,21 @@ void Init_cbson() {
     lt_operator = rb_intern("<");
     gt_operator = rb_intern(">");
 
-    bson = rb_const_get(rb_cObject, rb_intern("BSON"));
-    rb_require("bson/types/binary");
+    bson = rb_const_get(rb_cObject, rb_intern("BSONV1"));
+    rb_require("bsonv1/types/binary");
     Binary = rb_const_get(bson, rb_intern("Binary"));
-    rb_require("bson/types/object_id");
+    rb_require("bsonv1/types/object_id");
     ObjectId = rb_const_get(bson, rb_intern("ObjectId"));
-    rb_require("bson/types/dbref");
+    rb_require("bsonv1/types/dbref");
     DBRef = rb_const_get(bson, rb_intern("DBRef"));
-    rb_require("bson/types/code");
+    rb_require("bsonv1/types/code");
     Code = rb_const_get(bson, rb_intern("Code"));
-    rb_require("bson/types/min_max_keys");
+    rb_require("bsonv1/types/min_max_keys");
     MinKey = rb_const_get(bson, rb_intern("MinKey"));
     MaxKey = rb_const_get(bson, rb_intern("MaxKey"));
-    rb_require("bson/types/timestamp");
+    rb_require("bsonv1/types/timestamp");
     Timestamp = rb_const_get(bson, rb_intern("Timestamp"));
-    rb_require("bson/types/regex");
+    rb_require("bsonv1/types/regex");
     BSONRegex = rb_const_get(bson, rb_intern("Regex"));
     BSONRegex_IGNORECASE = FIX2INT(rb_const_get(BSONRegex, rb_intern("IGNORECASE")));
     BSONRegex_EXTENDED = FIX2INT(rb_const_get(BSONRegex, rb_intern("EXTENDED")));
@@ -1169,12 +1169,12 @@ void Init_cbson() {
     BSONRegex_LOCALE_DEPENDENT = FIX2INT(rb_const_get(BSONRegex, rb_intern("LOCALE_DEPENDENT")));
     BSONRegex_UNICODE = FIX2INT(rb_const_get(BSONRegex, rb_intern("UNICODE")));
     Regexp = rb_const_get(rb_cObject, rb_intern("Regexp"));
-    rb_require("bson/exceptions");
+    rb_require("bsonv1/exceptions");
     InvalidKeyName = rb_const_get(bson, rb_intern("InvalidKeyName"));
     InvalidStringEncoding = rb_const_get(bson, rb_intern("InvalidStringEncoding"));
     InvalidDocument = rb_const_get(bson, rb_intern("InvalidDocument"));
     InvalidObjectId = rb_const_get(bson, rb_intern("InvalidObjectId"));
-    rb_require("bson/ordered_hash");
+    rb_require("bsonv1/ordered_hash");
     OrderedHash = rb_const_get(bson, rb_intern("OrderedHash"));
     RB_HASH = rb_const_get(bson, rb_intern("Hash"));
 

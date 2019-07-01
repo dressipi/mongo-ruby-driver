@@ -27,7 +27,7 @@ end
 
 class Test::Unit::TestCase
   include Mongo
-  include BSON
+  include BSONV1
 
   # Handles creating a pre-defined MongoDB cluster for integration testing.
   #
@@ -147,7 +147,7 @@ class Test::Unit::TestCase
     start   = Time.now
     timeout = 20 # seconds
     begin
-      step_down_command = BSON::OrderedHash.new
+      step_down_command = BSONV1::OrderedHash.new
       step_down_command[:replSetStepDown] = 30
       step_down_command[:force] = true
       member['admin'].command(step_down_command)
@@ -204,7 +204,7 @@ class Test::Unit::TestCase
     end
   end
 
-  def match_document(key, expected, actual) # special cases for Regexp match, BSON::ObjectId, Range
+  def match_document(key, expected, actual) # special cases for Regexp match, BSONV1::ObjectId, Range
     if expected.is_a?(Hash) && actual.is_a?(Hash)
       expected_keys = expected.keys.sort
       actual_keys = actual.keys.sort
@@ -219,7 +219,7 @@ class Test::Unit::TestCase
       (0...expected.size).each{|i| match_document(i, expected[i], actual[i])}
     elsif expected.is_a?(Regexp) && actual.is_a?(String)
       raise "field:#{key.inspect} - Regexp expected:#{expected.inspect} actual:#{actual.inspect}" if expected !~ actual
-    elsif expected.is_a?(BSON::ObjectId) && actual.is_a?(BSON::ObjectId)
+    elsif expected.is_a?(BSONV1::ObjectId) && actual.is_a?(BSONV1::ObjectId)
       # match type but not value
     elsif expected.is_a?(Range)
       raise "field:#{key.inspect} - Range expected:#{expected.inspect} actual:#{actual.inspect}" if !expected.include?(actual)
@@ -354,11 +354,11 @@ class Test::Unit::TestCase
     if auth_enabled?(client) && client.server_version >= "2.6"
       # we need to have anyAction on anyResource to run db_eval()
       admin = client['admin']
-      any_priv = BSON::OrderedHash.new
+      any_priv = BSONV1::OrderedHash.new
       any_priv[:resource] = { :anyResource => true }
       any_priv[:actions] = ['anyAction']
 
-      create_role = BSON::OrderedHash.new
+      create_role = BSONV1::OrderedHash.new
       create_role[:createRole] = 'db_eval'
       create_role[:privileges] = [any_priv]
       create_role[:roles] = []
@@ -369,7 +369,7 @@ class Test::Unit::TestCase
         # role already exists
       end
 
-      grant_role = BSON::OrderedHash.new
+      grant_role = BSONV1::OrderedHash.new
       grant_role[:grantRolesToUser] = TEST_USER
       grant_role[:roles] = ['db_eval']
       admin.command(grant_role)

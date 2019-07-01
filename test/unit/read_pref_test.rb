@@ -34,85 +34,85 @@ class ReadPreferenceUnitTest < Test::Unit::TestCase
   end
 
   def test_sok_mapreduce_out_string_returns_false
-    command = BSON::OrderedHash['mapreduce', 'test-collection',
+    command = BSONV1::OrderedHash['mapreduce', 'test-collection',
                                 'out', 'new-test-collection']
     assert_equal false, ReadPreference::secondary_ok?(command)
   end
 
   def test_sok_mapreduce_replace_collection_returns_false
-    command = BSON::OrderedHash['mapreduce', 'test-collection',
-                                'out', BSON::OrderedHash['replace', 'new-test-collection']]
+    command = BSONV1::OrderedHash['mapreduce', 'test-collection',
+                                'out', BSONV1::OrderedHash['replace', 'new-test-collection']]
     assert_equal false, ReadPreference::secondary_ok?(command)
   end
 
   def test_sok_mapreduce_inline_collection_returns_false
-    command = BSON::OrderedHash['mapreduce', 'test-collection',
+    command = BSONV1::OrderedHash['mapreduce', 'test-collection',
                                 'out', 'inline']
     assert_equal false, ReadPreference::secondary_ok?(command)
   end
 
   def test_sok_inline_symbol_mapreduce_returns_true
-    command = BSON::OrderedHash['mapreduce', 'test-collection',
-                                'out', BSON::OrderedHash[:inline, 'true']]
+    command = BSONV1::OrderedHash['mapreduce', 'test-collection',
+                                'out', BSONV1::OrderedHash[:inline, 'true']]
     assert_equal true, ReadPreference::secondary_ok?(command)
   end
 
   def test_sok_inline_string_mapreduce_returns_true
-    command = BSON::OrderedHash['mapreduce', 'test-collection',
-                                'out', BSON::OrderedHash['inline', 'true']]
+    command = BSONV1::OrderedHash['mapreduce', 'test-collection',
+                                'out', BSONV1::OrderedHash['inline', 'true']]
     assert_equal true, ReadPreference::secondary_ok?(command)
   end
 
   def test_sok_count_true
-    command = BSON::OrderedHash['count', 'test-collection',
-                                'query', BSON::OrderedHash['a', 'b']]
+    command = BSONV1::OrderedHash['count', 'test-collection',
+                                'query', BSONV1::OrderedHash['a', 'b']]
     assert_equal true, ReadPreference::secondary_ok?(command)
   end
 
   def test_sok_server_status_returns_false
-    command = BSON::OrderedHash['serverStatus', 1]
+    command = BSONV1::OrderedHash['serverStatus', 1]
     assert_equal false, ReadPreference::secondary_ok?(command)
   end
 
   def test_sok_text_returns_true
-    command = BSON::OrderedHash['text', BSON::OrderedHash['search', 'coffee']]
+    command = BSONV1::OrderedHash['text', BSONV1::OrderedHash['search', 'coffee']]
     assert_equal true, ReadPreference::secondary_ok?(command)
   end
 
   def test_cmd_reroute_with_secondary
     ReadPreference::expects(:warn).with(regexp_matches(/rerouted to primary/))
-    command = BSON::OrderedHash['mapreduce', 'test-collection',
+    command = BSONV1::OrderedHash['mapreduce', 'test-collection',
                                 'out', 'new-test-collection']
     assert_equal :primary, ReadPreference::cmd_read_pref(:secondary, command)
   end
 
   def test_find_and_modify_reroute_with_secondary
     ReadPreference::expects(:warn).with(regexp_matches(/rerouted to primary/))
-    command = BSON::OrderedHash['findAndModify', 'test-collection',
+    command = BSONV1::OrderedHash['findAndModify', 'test-collection',
                                 'query', {}]
     assert_equal :primary, ReadPreference::cmd_read_pref(:secondary, command)
   end
 
   def test_cmd_no_reroute_with_secondary
-    command = BSON::OrderedHash['mapreduce', 'test-collection',
-                                'out', BSON::OrderedHash['inline', 'true']]
+    command = BSONV1::OrderedHash['mapreduce', 'test-collection',
+                                'out', BSONV1::OrderedHash['inline', 'true']]
     assert_equal :secondary, ReadPreference::cmd_read_pref(:secondary, command)
   end
 
   def test_cmd_no_reroute_with_primary
-    command = BSON::OrderedHash['mapreduce', 'test-collection',
+    command = BSONV1::OrderedHash['mapreduce', 'test-collection',
                                 'out', 'new-test-collection']
     assert_equal :primary, ReadPreference::cmd_read_pref(:primary, command)
   end
 
   def test_cmd_no_reroute_with_primary_secondary_ok
-    command = BSON::OrderedHash['mapreduce', 'test-collection',
-                                'out', BSON::OrderedHash['inline', 'true']]
+    command = BSONV1::OrderedHash['mapreduce', 'test-collection',
+                                'out', BSONV1::OrderedHash['inline', 'true']]
     assert_equal :primary, ReadPreference::cmd_read_pref(:primary, command)
   end
 
   def test_parallel_scan_secondary_ok
-    command = BSON::OrderedHash['parallelCollectionScan', 'test-collection',
+    command = BSONV1::OrderedHash['parallelCollectionScan', 'test-collection',
                                 'numCursors', 3]
     assert_equal true, ReadPreference::secondary_ok?(command)
   end

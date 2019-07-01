@@ -17,7 +17,7 @@
 require 'test_helper'
 
 class ByteBufferTest < Test::Unit::TestCase
-  include BSON
+  include BSONV1
 
   def setup
     @buf = ByteBuffer.new
@@ -87,17 +87,17 @@ class ByteBufferTest < Test::Unit::TestCase
     assert_equal 41.2, @buf.get_double
   end
 
-  if BSON_CODER == BSON::BSON_RUBY
+  if BSON_CODER == BSONV1::BSON_RUBY
     if defined?(Encoding)
       def test_serialize_cstr_throws_error_for_bad_utf8
         bad = "hello \xC8".force_encoding("ISO-8859-7")
-        assert_raises(BSON::InvalidStringEncoding) do
+        assert_raises(BSONV1::InvalidStringEncoding) do
           BSON_CODER::serialize_cstr(@buf, bad)
         end
       end
 
       def test_serialize_cstr_does_not_validate_data_as_utf8
-        assert_raises(BSON::InvalidStringEncoding) do
+        assert_raises(BSONV1::InvalidStringEncoding) do
           BSON_CODER::serialize_cstr(@buf, "hello \xFF")
         end
       end
@@ -109,7 +109,7 @@ class ByteBufferTest < Test::Unit::TestCase
       end
 
       def test_serialize_cstr_validates_data_as_utf8
-        assert_raises(BSON::InvalidStringEncoding) do
+        assert_raises(BSONV1::InvalidStringEncoding) do
           BSON_CODER::serialize_cstr(@buf, "hello \xFF")
         end
       end

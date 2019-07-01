@@ -56,10 +56,10 @@ end
 
 class BSONTest < Test::Unit::TestCase
 
-  include BSON
+  include BSONV1
 
   def setup
-    @encoder = BSON::BSON_CODER
+    @encoder = BSONV1::BSON_CODER
   end
 
   def assert_doc_pass(doc, options={})
@@ -75,22 +75,22 @@ class BSONTest < Test::Unit::TestCase
 
   def test_interface
     doc = { 'a' => 1 }
-    bson = BSON.serialize(doc)
-    assert_equal doc, BSON.deserialize(bson)
+    bson = BSONV1.serialize(doc)
+    assert_equal doc, BSONV1.deserialize(bson)
   end
 
   def test_read_bson_document
     bson_file_data_h_star = ["21000000075f6964005115883c3d75c94d3aa18b63016100000000000000f03f00"]
     strio = StringIO.new(bson_file_data_h_star.pack('H*'))
-    bson = BSON.read_bson_document(strio)
-    doc = {"_id"=>BSON::ObjectId('5115883c3d75c94d3aa18b63'), "a"=>1.0}
+    bson = BSONV1.read_bson_document(strio)
+    doc = {"_id"=>BSONV1::ObjectId('5115883c3d75c94d3aa18b63'), "a"=>1.0}
     assert_equal doc, bson
   end
 
   def test_bson_ruby_interface
     doc = { 'a' => 1 }
     buf = BSON_RUBY.serialize(doc)
-    bson = BSON::BSON_RUBY.new
+    bson = BSONV1::BSON_RUBY.new
     bson.instance_variable_set(:@buf, buf)
     assert_equal [12, 0, 0, 0, 16, 97, 0, 1, 0, 0, 0, 0], bson.to_a
     assert_equal "\f\x00\x00\x00\x10a\x00\x01\x00\x00\x00\x00", bson.to_s
@@ -107,7 +107,7 @@ class BSONTest < Test::Unit::TestCase
   end
 
   def test_bson_ruby_dbref_not_used
-    buf = BSON::ByteBuffer.new
+    buf = BSONV1::ByteBuffer.new
     val = ns = 'namespace'
 
     # Make a hole for the length
@@ -116,7 +116,7 @@ class BSONTest < Test::Unit::TestCase
 
     # Save the string
     start_pos = buf.position
-    BSON::BSON_RUBY.serialize_cstr(buf, val)
+    BSONV1::BSON_RUBY.serialize_cstr(buf, val)
     end_pos = buf.position
 
     # Put the string size in front
@@ -129,7 +129,7 @@ class BSONTest < Test::Unit::TestCase
     buf.put_array(oid.to_a)
     buf.rewind
 
-    bson = BSON::BSON_RUBY.new
+    bson = BSONV1::BSON_RUBY.new
     bson.instance_variable_set(:@buf, buf)
 
     assert_equal DBRef.new(ns, oid).to_s, bson.deserialize_dbref_data(buf).to_s
@@ -137,15 +137,15 @@ class BSONTest < Test::Unit::TestCase
 
   def test_require_hash
     assert_raise_error InvalidDocument, "takes a Hash" do
-      BSON.serialize('foo')
+      BSONV1.serialize('foo')
     end
 
     assert_raise_error InvalidDocument, "takes a Hash" do
-      BSON.serialize(Object.new)
+      BSONV1.serialize(Object.new)
     end
 
     assert_raise_error InvalidDocument, "takes a Hash" do
-      BSON.serialize(Set.new)
+      BSONV1.serialize(Set.new)
     end
   end
 
@@ -176,7 +176,7 @@ class BSONTest < Test::Unit::TestCase
   end
 
   def test_limit_max_bson_size
-    doc = {'name' => 'a' * BSON::DEFAULT_MAX_BSON_SIZE}
+    doc = {'name' => 'a' * BSONV1::DEFAULT_MAX_BSON_SIZE}
     assert_raise InvalidDocument do
       assert @encoder.serialize(doc)
     end
@@ -222,22 +222,22 @@ class BSONTest < Test::Unit::TestCase
   else
     unless RUBY_PLATFORM == 'java'
       def test_non_utf8_string
-        assert_raise BSON::InvalidStringEncoding do
-          BSON::BSON_CODER.serialize({'str' => 'aé'.encode('iso-8859-1')})
+        assert_raise BSONV1::InvalidStringEncoding do
+          BSONV1::BSON_CODER.serialize({'str' => 'aé'.encode('iso-8859-1')})
         end
       end
 
       def test_invalid_utf8_string
         str = "123\xD9"
         assert !str.valid_encoding?
-        assert_raise BSON::InvalidStringEncoding do
-          BSON::BSON_CODER.serialize({'str' => str})
+        assert_raise BSONV1::InvalidStringEncoding do
+          BSONV1::BSON_CODER.serialize({'str' => str})
         end
       end
 
       def test_non_utf8_key
-        assert_raise BSON::InvalidStringEncoding do
-          BSON::BSON_CODER.serialize({'aé'.encode('iso-8859-1') => 'hello'})
+        assert_raise BSONV1::InvalidStringEncoding do
+          BSONV1::BSON_CODER.serialize({'aé'.encode('iso-8859-1') => 'hello'})
         end
       end
 
@@ -253,10 +253,10 @@ class BSONTest < Test::Unit::TestCase
         before_enc = Encoding.default_internal
 
         str = "壁に耳あり、障子に目あり"
-        bson = BSON::BSON_CODER.serialize("x" => str)
+        bson = BSONV1::BSON_CODER.serialize("x" => str)
 
         silently { Encoding.default_internal = 'EUC-JP' }
-        out = BSON::BSON_CODER.deserialize(bson)["x"]
+        out = BSONV1::BSON_CODER.deserialize(bson)["x"]
 
         assert_equal Encoding.default_internal, out.encoding
         assert_equal str.encode('EUC-JP'), out
@@ -274,7 +274,7 @@ class BSONTest < Test::Unit::TestCase
     doc = {'$where' => code}
     assert_doc_pass(doc)
     code = 'this.c.d < this.e'.to_bson_code # core_ext.rb
-    assert_equal BSON::Code, code.class
+    assert_equal BSONV1::Code, code.class
     assert_equal code, code.to_bson_code
   end
 
@@ -309,7 +309,7 @@ class BSONTest < Test::Unit::TestCase
   end
 
   def test_ordered_hash
-    doc = BSON::OrderedHash.new
+    doc = BSONV1::OrderedHash.new
     doc["b"] = 1
     doc["a"] = 2
     doc["c"] = 3
@@ -367,7 +367,7 @@ class BSONTest < Test::Unit::TestCase
   end
 
   def test_bson_regex
-    doc = { 'doc' => BSON::Regex.new('foobar') }
+    doc = { 'doc' => BSONV1::Regex.new('foobar') }
     bson = @encoder.serialize(doc)
     assert_equal @encoder.serialize(doc).to_a, bson.to_a
     assert_equal doc, @encoder.deserialize(bson, :compile_regex => false)
@@ -375,37 +375,37 @@ class BSONTest < Test::Unit::TestCase
 
   def test_bson_regex_with_nonruby_flags
     # create a bson regex with more flags than can be represented in Ruby
-    bson_regex = BSON::Regex.new('foobar', 'i', 'l', 'm', 's', 'u', 'x')
+    bson_regex = BSONV1::Regex.new('foobar', 'i', 'l', 'm', 's', 'u', 'x')
     doc = { 'regexp' => bson_regex }
     bson = @encoder.serialize(doc)
     assert_equal @encoder.serialize(doc).to_a, bson.to_a
     bson_regex = @encoder.deserialize(bson, :compile_regex => false)['regexp']
-    assert_equal BSON::Regex::IGNORECASE,       BSON::Regex::IGNORECASE       & bson_regex.options
-    assert_equal BSON::Regex::LOCALE_DEPENDENT, BSON::Regex::LOCALE_DEPENDENT & bson_regex.options
-    assert_equal BSON::Regex::MULTILINE,        BSON::Regex::MULTILINE        & bson_regex.options
-    assert_equal BSON::Regex::DOTALL,           BSON::Regex::DOTALL           & bson_regex.options
-    assert_equal BSON::Regex::UNICODE,          BSON::Regex::UNICODE          & bson_regex.options
-    assert_equal BSON::Regex::EXTENDED,         BSON::Regex::EXTENDED         & bson_regex.options
+    assert_equal BSONV1::Regex::IGNORECASE,       BSONV1::Regex::IGNORECASE       & bson_regex.options
+    assert_equal BSONV1::Regex::LOCALE_DEPENDENT, BSONV1::Regex::LOCALE_DEPENDENT & bson_regex.options
+    assert_equal BSONV1::Regex::MULTILINE,        BSONV1::Regex::MULTILINE        & bson_regex.options
+    assert_equal BSONV1::Regex::DOTALL,           BSONV1::Regex::DOTALL           & bson_regex.options
+    assert_equal BSONV1::Regex::UNICODE,          BSONV1::Regex::UNICODE          & bson_regex.options
+    assert_equal BSONV1::Regex::EXTENDED,         BSONV1::Regex::EXTENDED         & bson_regex.options
   end
 
   def test_bson_regex_to_ruby_regexp
-    bson_regex = BSON::Regex.new('foobar', 'i', 'l', 'm', 's', 'u', 'x')
+    bson_regex = BSONV1::Regex.new('foobar', 'i', 'l', 'm', 's', 'u', 'x')
     doc = { 'doc' => bson_regex }
     bson = @encoder.serialize(doc)
     assert_equal 0x7, @encoder.deserialize(bson, :compile_regex => true)['doc'].options
   end
 
   def test_bson_regex_options
-    bson_regex = BSON::Regex.new('foobar', 'i')
+    bson_regex = BSONV1::Regex.new('foobar', 'i')
     doc = { 'doc' => bson_regex }
     bson = @encoder.serialize(doc)
     options = @encoder.deserialize(bson, :compile_regex => false)['doc'].options
-    assert_equal BSON::Regex::IGNORECASE, BSON::Regex::IGNORECASE & options
-    assert_equal 0, BSON::Regex::LOCALE_DEPENDENT & options
-    assert_equal 0, BSON::Regex::MULTILINE & options
-    assert_equal 0, BSON::Regex::DOTALL & options
-    assert_equal 0, BSON::Regex::UNICODE & options
-    assert_equal 0, BSON::Regex::EXTENDED & options
+    assert_equal BSONV1::Regex::IGNORECASE, BSONV1::Regex::IGNORECASE & options
+    assert_equal 0, BSONV1::Regex::LOCALE_DEPENDENT & options
+    assert_equal 0, BSONV1::Regex::MULTILINE & options
+    assert_equal 0, BSONV1::Regex::DOTALL & options
+    assert_equal 0, BSONV1::Regex::UNICODE & options
+    assert_equal 0, BSONV1::Regex::EXTENDED & options
   end
 
   def test_ruby_regexp_to_bson_regex
@@ -413,10 +413,10 @@ class BSONTest < Test::Unit::TestCase
     doc = { 'doc' => regexp }
     bson = @encoder.serialize(doc)
     bson_regx = @encoder.deserialize(bson, :compile_regex => false)['doc']
-    assert_equal BSON::Regex::MULTILINE,  BSON::Regex::MULTILINE  & bson_regx.options
-    assert_equal BSON::Regex::EXTENDED,   BSON::Regex::EXTENDED   & bson_regx.options
-    assert_equal BSON::Regex::IGNORECASE, BSON::Regex::IGNORECASE & bson_regx.options
-    assert_equal BSON::Regex::DOTALL,     BSON::Regex::DOTALL     & bson_regx.options
+    assert_equal BSONV1::Regex::MULTILINE,  BSONV1::Regex::MULTILINE  & bson_regx.options
+    assert_equal BSONV1::Regex::EXTENDED,   BSONV1::Regex::EXTENDED   & bson_regx.options
+    assert_equal BSONV1::Regex::IGNORECASE, BSONV1::Regex::IGNORECASE & bson_regx.options
+    assert_equal BSONV1::Regex::DOTALL,     BSONV1::Regex::DOTALL     & bson_regx.options
   end
 
   def test_boolean
@@ -466,7 +466,7 @@ class BSONTest < Test::Unit::TestCase
     [DateTime.now, Date.today, Zone].each do |invalid_date|
       doc = {:date => invalid_date}
       begin
-      BSON::BSON_CODER.serialize(doc)
+      BSONV1::BSON_CODER.serialize(doc)
       rescue => e
       ensure
         if !invalid_date.is_a? Time
@@ -488,7 +488,7 @@ class BSONTest < Test::Unit::TestCase
     doc2 = @encoder.deserialize(bson)
 
     # Java doesn't deserialize to DBRefs
-    if RUBY_PLATFORM =~ /java/ && BSON.extension?
+    if RUBY_PLATFORM =~ /java/ && BSONV1.extension?
       assert_equal 'namespace', doc2['dbref']['$ns']
       assert_equal oid, doc2['dbref']['$id']
     else
@@ -583,27 +583,27 @@ class BSONTest < Test::Unit::TestCase
   end
 
   def test_put_id_first
-    val = BSON::OrderedHash.new
+    val = BSONV1::OrderedHash.new
     val['not_id'] = 1
     val['_id'] = 2
     roundtrip = @encoder.deserialize(@encoder.serialize(val, false, true).to_s)
-    assert_kind_of BSON::OrderedHash, roundtrip
+    assert_kind_of BSONV1::OrderedHash, roundtrip
     assert_equal '_id', roundtrip.keys.first
 
     val = {'a' => 'foo', 'b' => 'bar', :_id => 42, 'z' => 'hello'}
     roundtrip = @encoder.deserialize(@encoder.serialize(val, false, true).to_s)
-    assert_kind_of BSON::OrderedHash, roundtrip
+    assert_kind_of BSONV1::OrderedHash, roundtrip
     assert_equal '_id', roundtrip.keys.first
   end
 
   def test_bad_id_keys
     doc = { '_id' => { '$bad' => 123 } }
     check_keys = true
-    assert_raise BSON::InvalidKeyName do
+    assert_raise BSONV1::InvalidKeyName do
       @encoder.serialize(doc, check_keys)
     end
     doc = { '_id' => { '$oid' => '52d0b971b3ba219fdeb4170e' } }
-    assert_raise BSON::InvalidKeyName do
+    assert_raise BSONV1::InvalidKeyName do
       @encoder.serialize(doc, check_keys)
     end
   end
@@ -661,7 +661,7 @@ class BSONTest < Test::Unit::TestCase
 
     doc["x"] = doc["x"] - 1
     assert_raise RangeError do
-      BSON::BSON_CODER.serialize(doc)
+      BSONV1::BSON_CODER.serialize(doc)
     end
   end
 
@@ -679,7 +679,7 @@ class BSONTest < Test::Unit::TestCase
   end
 
   def test_do_not_change_original_object
-    val = BSON::OrderedHash.new
+    val = BSONV1::OrderedHash.new
     val['not_id'] = 1
     val['_id'] = 2
     assert val.keys.include?('_id')
@@ -759,7 +759,7 @@ class BSONTest < Test::Unit::TestCase
   end
 
   def test_move_id
-    a = BSON::OrderedHash.new
+    a = BSONV1::OrderedHash.new
     a['text'] = 'abc'
     a['key'] = 'abc'
     a['_id']  = 1
@@ -775,10 +775,10 @@ class BSONTest < Test::Unit::TestCase
   end
 
   def test_move_id_with_nested_doc
-    b = BSON::OrderedHash.new
+    b = BSONV1::OrderedHash.new
     b['text'] = 'abc'
     b['_id']   = 2
-    c = BSON::OrderedHash.new
+    c = BSONV1::OrderedHash.new
     c['text'] = 'abc'
     c['hash'] = b
     c['_id']  = 3
@@ -803,39 +803,39 @@ class BSONTest < Test::Unit::TestCase
     assert @encoder.serialize({"he$llo" => "world"}, true)
     assert @encoder.serialize({"hello" => {"hell$o" => "world"}}, true)
 
-    assert_raise BSON::InvalidDocument do
+    assert_raise BSONV1::InvalidDocument do
       @encoder.serialize({"he\0llo" => "world"}, true)
     end
 
-    assert_raise BSON::InvalidKeyName do
+    assert_raise BSONV1::InvalidKeyName do
       @encoder.serialize({"$hello" => "world"}, true)
     end
 
-    assert_raise BSON::InvalidKeyName do
+    assert_raise BSONV1::InvalidKeyName do
       @encoder.serialize({"hello" => {"$hello" => "world"}}, true)
     end
 
-    assert_raise BSON::InvalidKeyName  do
+    assert_raise BSONV1::InvalidKeyName  do
       @encoder.serialize({".hello" => "world"}, true)
     end
 
-    assert_raise BSON::InvalidKeyName do
+    assert_raise BSONV1::InvalidKeyName do
       @encoder.serialize({"hello" => {".hello" => "world"}}, true)
     end
 
-    assert_raise BSON::InvalidKeyName do
+    assert_raise BSONV1::InvalidKeyName do
       @encoder.serialize({"hello." => "world"}, true)
     end
 
-    assert_raise BSON::InvalidKeyName do
+    assert_raise BSONV1::InvalidKeyName do
       @encoder.serialize({"hello" => {"hello." => "world"}}, true)
     end
 
-    assert_raise BSON::InvalidKeyName do
+    assert_raise BSONV1::InvalidKeyName do
       @encoder.serialize({"hel.lo" => "world"}, true)
     end
 
-    assert_raise BSON::InvalidKeyName do
+    assert_raise BSONV1::InvalidKeyName do
       @encoder.serialize({"hello" => {"hel.lo" => "world"}}, true)
     end
   end

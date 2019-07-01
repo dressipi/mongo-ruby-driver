@@ -20,7 +20,7 @@ jar_dir = File.expand_path(File.join(File.dirname(__FILE__), '../../ext/jbson'))
 require File.join(jar_dir, 'lib/java-bson.jar')
 require File.join(jar_dir, 'target/jbson.jar')
 
-module BSON
+module BSONV1
   class BSON_JAVA
     def self.serialize(obj, check_keys=false, move_id=false, max_bson_size=DEFAULT_MAX_BSON_SIZE)
       raise InvalidDocument, "BSON_JAVA.serialize takes a Hash" unless obj.is_a?(Hash)

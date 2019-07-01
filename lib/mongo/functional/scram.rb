@@ -79,7 +79,7 @@ module Mongo
       # @return [ String ] nonce The initial user nonce.
       attr_reader :nonce
 
-      # @return [ BSON::OrderedHash ] reply The current reply in the conversation.
+      # @return [ BSONV1::OrderedHash ] reply The current reply in the conversation.
       attr_reader :reply
 
       # @return [ Hash ] auth The authentication details.
@@ -95,15 +95,15 @@ module Mongo
       # @example Continue the conversation.
       #   conversation.continue(reply)
       #
-      # @param [ BSON::OrderedHash ] reply The reply of the previous
+      # @param [ BSONV1::OrderedHash ] reply The reply of the previous
       #   message.
       #
-      # @return [ BSON::OrderedHash ] The next message to send.
+      # @return [ BSONV1::OrderedHash ] The next message to send.
       #
       # @since 1.12.0
       def continue(reply)
         validate_first_message!(reply)
-        command = BSON::OrderedHash.new
+        command = BSONV1::OrderedHash.new
         command['saslContinue'] = 1
         command[PAYLOAD] = client_final_message
         command[ID] = id
@@ -117,15 +117,15 @@ module Mongo
       # @example Continue the conversation when copying a database.
       #   conversation.copy_db_continue(reply)
       #
-      # @param [ BSON::OrderedHash ] reply The reply of the previous
+      # @param [ BSONV1::OrderedHash ] reply The reply of the previous
       #   message.
       #
-      # @return [ BSON::OrderedHash ] The next message to send.
+      # @return [ BSONV1::OrderedHash ] The next message to send.
       #
       # @since 1.12.0
       def copy_db_continue(reply)
         validate_first_message!(reply)
-        command = BSON::OrderedHash.new
+        command = BSONV1::OrderedHash.new
         command['copydb'] = 1
         command['fromhost'] = @copy_db[:from_host]
         command['fromdb'] = @copy_db[:from_db]
@@ -141,15 +141,15 @@ module Mongo
       # @example Finalize the conversation.
       #   conversation.finalize(reply)
       #
-      # @param [ BSON::OrderedHash ] reply The reply of the previous
+      # @param [ BSONV1::OrderedHash ] reply The reply of the previous
       #   message.
       #
-      # @return [ BSON::OrderedHash ] The next message to send.
+      # @return [ BSONV1::OrderedHash ] The next message to send.
       #
       # @since 1.12.0
       def finalize(reply)
         validate_final_message!(reply)
-        command = BSON::OrderedHash.new
+        command = BSONV1::OrderedHash.new
         command['saslContinue'] = 1
         command[PAYLOAD] = client_empty_message
         command[ID] = id
@@ -162,11 +162,11 @@ module Mongo
       # @example Start the conversation.
       #   conversation.start
       #
-      # @return [ BSON::OrderedHash ] The first SCRAM conversation message.
+      # @return [ BSONV1::OrderedHash ] The first SCRAM conversation message.
       #
       # @since 1.12.0
       def start
-        command = BSON::OrderedHash.new
+        command = BSONV1::OrderedHash.new
         command['saslStart'] = 1
         command['autoAuthorize'] = 1
         command[PAYLOAD] = client_first_message
@@ -180,11 +180,11 @@ module Mongo
       # @example Start the copydb conversation.
       #   conversation.copy_db_start
       #
-      # @return [ BSON::OrderedHash ] The first SCRAM copy_db conversation message.
+      # @return [ BSONV1::OrderedHash ] The first SCRAM copy_db conversation message.
       #
       # @since 1.12.0
       def copy_db_start
-        command = BSON::OrderedHash.new
+        command = BSONV1::OrderedHash.new
         command['copydbsaslstart'] = 1
         command['autoAuthorize'] = 1
         command['fromhost'] = @copy_db[:from_host]
@@ -238,7 +238,7 @@ module Mongo
       #
       # @since 1.12.0
       def client_empty_message
-        BSON::Binary.new('')
+        BSONV1::Binary.new('')
       end
 
       # Get the final client message.
@@ -249,7 +249,7 @@ module Mongo
       #
       # @since 1.12.0
       def client_final_message
-        BSON::Binary.new("#{without_proof},p=#{client_final}")
+        BSONV1::Binary.new("#{without_proof},p=#{client_final}")
       end
 
       # Get the client first message
@@ -260,7 +260,7 @@ module Mongo
       #
       # @since 1.12.0
       def client_first_message
-        BSON::Binary.new("n,,#{first_bare}")
+        BSONV1::Binary.new("n,,#{first_bare}")
       end
 
       # Client final implementation.

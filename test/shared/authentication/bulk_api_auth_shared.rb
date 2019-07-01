@@ -21,11 +21,11 @@ module BulkAPIAuthTests
     @collection = @db["bulk-api-auth-tests"]
 
     # db user can insert but not remove
-    res = BSON::OrderedHash.new
+    res = BSONV1::OrderedHash.new
     res[:db] = @db.name
     res[:collection] = ""
 
-    cmd = BSON::OrderedHash.new
+    cmd = BSONV1::OrderedHash.new
     cmd[:createRole] = "insertOnly"
     cmd[:privileges] = [{:resource => res, :actions => [ "insert", "find" ]}]
     cmd[:roles] = []
@@ -33,7 +33,7 @@ module BulkAPIAuthTests
     @db.add_user('insertOnly', 'password', nil, :roles => ['insertOnly'])
 
     # db user can insert and remove
-    cmd = BSON::OrderedHash.new
+    cmd = BSONV1::OrderedHash.new
     cmd[:createRole] = "insertAndRemove"
     cmd[:privileges] = [{:resource => res, :actions => [ "insert", "remove", "find" ]}]
     cmd[:roles] = []

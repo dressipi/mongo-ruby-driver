@@ -106,7 +106,7 @@ class ReplicaSetCursorTest < Test::Unit::TestCase
   def route_query(read)
     read_opts = {:read => read}
     read_opts[:tag_sets] = [{:node => @tag}] unless read == :primary
-    object_id = BSON::ObjectId.new
+    object_id = BSONV1::ObjectId.new
     read_opts[:comment] = object_id
 
     # set profiling level to 2 on client and member to which the query will be routed

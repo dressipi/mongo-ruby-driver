@@ -37,7 +37,7 @@ module SCRAMTests
 
   def test_scram_conversation_continue
     setup_conversation
-    payload = BSON::Binary.new(
+    payload = BSONV1::Binary.new(
       'r=NDA2NzU3MDY3MDYwMTgyt7/+IWaw1HaZZ5NmPJUTWapLpH2Gg+d8,s=AVvQXzAbxweH2RYDICaplw==,i=10000'
     )
     reply = { 'conversationId' => 1, 'done' => false, 'payload' => payload, 'ok' => 1.0 }
@@ -52,7 +52,7 @@ module SCRAMTests
 
   def test_scram_conversation_continue_with_invalid_nonce
     setup_conversation
-    payload = BSON::Binary.new(
+    payload = BSONV1::Binary.new(
       'r=NDA2NzU4MDY3MDYwMTgyt7/+IWaw1HaZZ5NmPJUTWapLpH2Gg+d8,s=AVvQXzAbxweH2RYDICaplw==,i=10000'
     )
     reply = { 'conversationId' => 1, 'done' => false, 'payload' => payload, 'ok' => 1.0 }
@@ -63,12 +63,12 @@ module SCRAMTests
 
   def test_scram_conversation_finalize
     setup_conversation
-    continue_payload = BSON::Binary.new(
+    continue_payload = BSONV1::Binary.new(
       'r=NDA2NzU3MDY3MDYwMTgyt7/+IWaw1HaZZ5NmPJUTWapLpH2Gg+d8,s=AVvQXzAbxweH2RYDICaplw==,i=10000'
     )
     continue_reply = { 'conversationId' => 1, 'done' => false, 'payload' => continue_payload, 'ok' => 1.0 }
     @scram.continue(continue_reply)
-    payload = BSON::Binary.new('v=gwo9E8+uifshm7ixj441GvIfuUY=')
+    payload = BSONV1::Binary.new('v=gwo9E8+uifshm7ixj441GvIfuUY=')
     reply = { 'conversationId' => 1, 'done' => false, 'payload' => payload, 'ok' => 1.0 }
     command = @scram.finalize(reply)
     assert_equal 1, command['saslContinue']
@@ -78,12 +78,12 @@ module SCRAMTests
 
   def test_scram_conversation_finalize_with_invalid_server_signature
     setup_conversation
-    continue_payload = BSON::Binary.new(
+    continue_payload = BSONV1::Binary.new(
       'r=NDA2NzU3MDY3MDYwMTgyt7/+IWaw1HaZZ5NmPJUTWapLpH2Gg+d8,s=AVvQXzAbxweH2RYDICaplw==,i=10000'
     )
     continue_reply = { 'conversationId' => 1, 'done' => false, 'payload' => continue_payload, 'ok' => 1.0 }
     @scram.continue(continue_reply)
-    payload = BSON::Binary.new('v=LQ+8yhQeVL2a3Dh+TDJ7xHz4Srk=')
+    payload = BSONV1::Binary.new('v=LQ+8yhQeVL2a3Dh+TDJ7xHz4Srk=')
     reply = { 'conversationId' => 1, 'done' => false, 'payload' => payload, 'ok' => 1.0 }
     assert_raise_error Mongo::InvalidSignature do
       @scram.finalize(reply)

@@ -51,7 +51,7 @@ module Mongo
 
     def self.mongos(mode, tag_sets)
       if mode != :secondary_preferred || !tag_sets.empty?
-        mongos_read_preference = BSON::OrderedHash[:mode => MONGOS_MODES[mode]]
+        mongos_read_preference = BSONV1::OrderedHash[:mode => MONGOS_MODES[mode]]
         mongos_read_preference[:tags] = tag_sets if !tag_sets.empty?
       end
       mongos_read_preference

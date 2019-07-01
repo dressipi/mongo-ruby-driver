@@ -32,14 +32,14 @@ module Mongo
 
         begin
           authenticator = org.mongodb.sasl.GSSAPIAuthenticator.new(JRuby.runtime, username, hostname, servicename, canonicalize)
-          token         = BSON::Binary.new(authenticator.initialize_challenge)
-          cmd           = BSON::OrderedHash['saslStart', 1, 'mechanism', 'GSSAPI', 'payload', token, 'autoAuthorize', 1]
+          token         = BSONV1::Binary.new(authenticator.initialize_challenge)
+          cmd           = BSONV1::OrderedHash['saslStart', 1, 'mechanism', 'GSSAPI', 'payload', token, 'autoAuthorize', 1]
           response      = db.command(cmd, :check_response => false, :socket => socket)
 
           until response['done'] do
             break unless Support.ok?(response)
-            token    = BSON::Binary.new(authenticator.evaluate_challenge(response['payload'].to_s))
-            cmd      = BSON::OrderedHash['saslContinue', 1, 'conversationId', response['conversationId'], 'payload', token]
+            token    = BSONV1::Binary.new(authenticator.evaluate_challenge(response['payload'].to_s))
+            cmd      = BSONV1::OrderedHash['saslContinue', 1, 'conversationId', response['conversationId'], 'payload', token]
             response = db.command(cmd, :check_response => false, :socket => socket)
           end
           response

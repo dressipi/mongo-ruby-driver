@@ -18,12 +18,12 @@ class BSONRegexTest < Test::Unit::TestCase
 
   def test_convert_regexp_to_bson_regex
     regexp = Regexp.new(/.*/imx)
-    bson_regex = BSON::Regex.from_native(regexp)
+    bson_regex = BSONV1::Regex.from_native(regexp)
     assert_equal regexp.source, bson_regex.source
   end
 
   def test_compile_bson_regex
-    bson_regex = BSON::Regex.new(".*", 'imx')
+    bson_regex = BSONV1::Regex.new(".*", 'imx')
     regexp = bson_regex.try_compile
     assert_equal 3, regexp.options
   end

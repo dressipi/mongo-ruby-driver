@@ -39,7 +39,7 @@ class String
 
   #:nodoc:
   def to_bson_code
-    BSON::Code.new(self)
+    BSONV1::Code.new(self)
   end
 
 end

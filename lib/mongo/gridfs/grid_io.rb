@@ -264,8 +264,8 @@ module Mongo
     private
 
     def create_chunk(n)
-      chunk = BSON::OrderedHash.new
-      chunk['_id']      = BSON::ObjectId.new
+      chunk = BSONV1::OrderedHash.new
+      chunk['_id']      = BSONV1::ObjectId.new
       chunk['n']        = n
       chunk['files_id'] = @files_id
       chunk['data']     = ''
@@ -389,7 +389,7 @@ module Mongo
         end
         chunk_available = @chunk_size - @chunk_position
         step_size = (to_write > chunk_available) ? chunk_available : to_write
-        @current_chunk['data'] = BSON::Binary.new((@current_chunk['data'].to_s << string[-to_write, step_size]).unpack("c*"))
+        @current_chunk['data'] = BSONV1::Binary.new((@current_chunk['data'].to_s << string[-to_write, step_size]).unpack("c*"))
         @chunk_position += step_size
         to_write -= step_size
         save_chunk(@current_chunk)
@@ -420,7 +420,7 @@ module Mongo
     # Initialize the class for writing a file.
     def init_write(opts)
       opts           = opts.dup
-      @files_id      = opts.delete(:_id) || BSON::ObjectId.new
+      @files_id      = opts.delete(:_id) || BSONV1::ObjectId.new
       @content_type  = opts.delete(:content_type) || (defined? MIME) && get_content_type || DEFAULT_CONTENT_TYPE
       @chunk_size    = opts.delete(:chunk_size) || DEFAULT_CHUNK_SIZE
       @metadata      = opts.delete(:metadata)
@@ -440,7 +440,7 @@ module Mongo
     end
 
     def to_mongo_object
-      h                = BSON::OrderedHash.new
+      h                = BSONV1::OrderedHash.new
       h['_id']         = @files_id
       h['filename']    = @filename if @filename
       h['contentType'] = @content_type
@@ -456,7 +456,7 @@ module Mongo
 
     # Get a server-side md5 and validate against the client if running with acknowledged writes
     def get_md5
-      md5_command            = BSON::OrderedHash.new
+      md5_command            = BSONV1::OrderedHash.new
       md5_command['filemd5'] = @files_id
       md5_command['root']    = @fs_name
       @server_md5 = @files.db.command(md5_command)['md5']

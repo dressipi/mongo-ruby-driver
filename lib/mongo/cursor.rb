@@ -199,19 +199,19 @@ module Mongo
     # @raise [OperationFailure] on a database error.
     def count(skip_and_limit = false)
       check_command_cursor
-      command = BSON::OrderedHash["count",  @collection.name, "query",  @selector]
+      command = BSONV1::OrderedHash["count",  @collection.name, "query",  @selector]
 
       if skip_and_limit
-        command.merge!(BSON::OrderedHash["limit", @limit]) if @limit != 0
-        command.merge!(BSON::OrderedHash["skip", @skip]) if @skip != 0
+        command.merge!(BSONV1::OrderedHash["limit", @limit]) if @limit != 0
+        command.merge!(BSONV1::OrderedHash["skip", @skip]) if @skip != 0
       end
 
       if @hint
         hint = @hint.is_a?(String) ? @hint : generate_index_name(@hint)
       end
 
-      command.merge!(BSON::OrderedHash["fields", @fields])
-      command.merge!(BSON::OrderedHash["hint", hint]) if hint
+      command.merge!(BSONV1::OrderedHash["fields", @fields])
+      command.merge!(BSONV1::OrderedHash["hint", hint]) if hint
 
       response = @db.command(command, :read => @read, :comment => @comment)
       return response['n'].to_i if Mongo::Support.ok?(response)
@@ -391,7 +391,7 @@ module Mongo
     # @return [True]
     def close
       if @cursor_id && @cursor_id != 0
-        message = BSON::ByteBuffer.new([0, 0, 0, 0])
+        message = BSONV1::ByteBuffer.new([0, 0, 0, 0])
         message.put_int(1)
         message.put_long(@cursor_id)
         log(:debug, "Cursor#close #{@cursor_id}")
@@ -470,7 +470,7 @@ module Mongo
     #
     # @return [Hash]
     def query_options_hash
-      BSON::OrderedHash[
+      BSONV1::OrderedHash[
         :selector => @selector,
         :fields   => @fields,
         :skip     => @skip,
@@ -580,10 +580,10 @@ module Mongo
     end
 
     def send_get_more
-      message = BSON::ByteBuffer.new([0, 0, 0, 0])
+      message = BSONV1::ByteBuffer.new([0, 0, 0, 0])
 
       # DB name.
-      BSON::BSON_RUBY.serialize_cstr(message, full_collection_name)
+      BSONV1::BSON_RUBY.serialize_cstr(message, full_collection_name)
 
       # Number of results to return.
       if @limit > 0
@@ -637,25 +637,25 @@ module Mongo
     end
 
     def construct_query_message
-      message = BSON::ByteBuffer.new("", @connection.max_bson_size + MongoClient::COMMAND_HEADROOM)
+      message = BSONV1::ByteBuffer.new("", @connection.max_bson_size + MongoClient::COMMAND_HEADROOM)
       message.put_int(@options)
-      BSON::BSON_RUBY.serialize_cstr(message, full_collection_name)
+      BSONV1::BSON_RUBY.serialize_cstr(message, full_collection_name)
       message.put_int(@skip)
       @batch_size > 1 ? message.put_int(@batch_size) : message.put_int(@limit)
       if query_contains_special_fields? && @bson # costs two serialize calls
-        query_message = BSON::BSON_CODER.serialize(@selector, false, false, @connection.max_bson_size + MongoClient::APPEND_HEADROOM)
+        query_message = BSONV1::BSON_CODER.serialize(@selector, false, false, @connection.max_bson_size + MongoClient::APPEND_HEADROOM)
         query_message.grow(@bson)
         query_spec = construct_query_spec
         query_spec.delete('$query')
-        query_message.grow(BSON::BSON_CODER.serialize(query_spec, false, false, @connection.max_bson_size))
+        query_message.grow(BSONV1::BSON_CODER.serialize(query_spec, false, false, @connection.max_bson_size))
       else # costs only one serialize call
         spec = query_contains_special_fields? ? construct_query_spec : @selector
         spec.merge!(@opts)
-        query_message = BSON::BSON_CODER.serialize(spec, false, false, @connection.max_bson_size + MongoClient::APPEND_HEADROOM)
+        query_message = BSONV1::BSON_CODER.serialize(spec, false, false, @connection.max_bson_size + MongoClient::APPEND_HEADROOM)
         query_message.grow(@bson) if @bson
       end
       message.put_binary(query_message.to_s)
-      message.put_binary(BSON::BSON_CODER.serialize(@fields, false, false, @connection.max_bson_size).to_s) if @fields
+      message.put_binary(BSONV1::BSON_CODER.serialize(@fields, false, false, @connection.max_bson_size).to_s) if @fields
       message
     end
 
@@ -670,7 +670,7 @@ module Mongo
 
     def construct_query_spec
       return @selector if @selector.has_key?('$query')
-      spec = BSON::OrderedHash.new
+      spec = BSONV1::OrderedHash.new
       spec['$query']    = @selector
       spec['$orderby']  = Mongo::Support.format_order_clause(@order) if @order
       spec['$hint']     = @hint if @hint && @hint.length > 0

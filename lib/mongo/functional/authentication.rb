@@ -290,7 +290,7 @@ module Mongo
     #
     # @since 1.12.0
     def copy_db_mongodb_cr(username, password, from_host, from_db, to_db)
-      oh = BSON::OrderedHash.new
+      oh = BSONV1::OrderedHash.new
       oh[:copydb]   = 1
       oh[:fromhost] = from_host
       oh[:fromdb]   = from_db
@@ -303,7 +303,7 @@ module Mongo
           raise MongoArgumentError,
             'Both username and password must be supplied for authentication.'
         end
-        nonce_cmd = BSON::OrderedHash.new
+        nonce_cmd = BSONV1::OrderedHash.new
         nonce_cmd[:copydbgetnonce] = 1
         nonce_cmd[:fromhost] = from_host
         result = auth_command(nonce_cmd, socket, 'admin').first
@@ -331,7 +331,7 @@ module Mongo
       nonce   = get_nonce(auth[:source], opts)
 
       # build auth command document
-      cmd = BSON::OrderedHash.new
+      cmd = BSONV1::OrderedHash.new
       cmd['authenticate'] = 1
       cmd['user'] = auth[:username]
       cmd['nonce'] = nonce
@@ -350,7 +350,7 @@ module Mongo
     def issue_x509(auth, opts={})
       db_name = '$external'
 
-      cmd = BSON::OrderedHash.new
+      cmd = BSONV1::OrderedHash.new
       cmd[:authenticate] = 1
       cmd[:mechanism]    = auth[:mechanism]
       cmd[:user]         = auth[:username]
@@ -372,10 +372,10 @@ module Mongo
       db_name = auth[:source]
       payload = "\x00#{auth[:username]}\x00#{auth[:password]}"
 
-      cmd = BSON::OrderedHash.new
+      cmd = BSONV1::OrderedHash.new
       cmd[:saslStart]     = 1
       cmd[:mechanism]     = auth[:mechanism]
-      cmd[:payload]       = BSON::Binary.new(payload)
+      cmd[:payload]       = BSONV1::Binary.new(payload)
       cmd[:autoAuthorize] = 1
 
       auth_command(cmd, opts[:socket], db_name).first
@@ -426,7 +426,7 @@ module Mongo
     #
     # @private
     def get_nonce(db_name, opts={})
-      cmd = BSON::OrderedHash.new
+      cmd = BSONV1::OrderedHash.new
       cmd[:getnonce] = 1
       doc = auth_command(cmd, opts[:socket], db_name).first
 

@@ -15,9 +15,9 @@
 require 'digest/md5'
 require 'socket'
 
-module BSON
+module BSONV1
 
-  def BSON::ObjectId(s)
+  def BSONV1::ObjectId(s)
     ObjectId.from_string(s)
   end
 
@@ -93,7 +93,7 @@ module BSON
     #
     # @param [BSON::ObjectId] object_id
     def eql?(object_id)
-      object_id.kind_of?(BSON::ObjectId) and self.data == object_id.data
+      object_id.kind_of?(BSONV1::ObjectId) and self.data == object_id.data
     end
     alias_method :==, :eql?
 
@@ -190,7 +190,7 @@ module BSON
 
       # We need to check whether BSON_CODER is defined because it's required by
       # the BSON C extensions.
-      if defined?(BSON::BSON_CODER) && BSON::BSON_CODER == BSON::BSON_RUBY
+      if defined?(BSONV1::BSON_CODER) && BSONV1::BSON_CODER == BSONV1::BSON_RUBY
         # This gets overwritten by the C extension if it loads.
         def generate(oid_time=nil)
           oid = ''

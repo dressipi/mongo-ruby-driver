@@ -27,13 +27,13 @@ module Mongo
         return { } unless authenticator.valid?
 
         token    = authenticator.initialize_challenge
-        cmd      = BSON::OrderedHash['saslStart', 1, 'mechanism', 'GSSAPI', 'payload', token, 'autoAuthorize', 1]
+        cmd      = BSONV1::OrderedHash['saslStart', 1, 'mechanism', 'GSSAPI', 'payload', token, 'autoAuthorize', 1]
         response = db.command(cmd, :check_response => false, :socket => socket)
 
         until response['done'] do
           break unless Support.ok?(response)
           token    = authenticator.evaluate_challenge(response['payload'])
-          cmd      = BSON::OrderedHash['saslContinue', 1, 'conversationId', response['conversationId'], 'payload', token]
+          cmd      = BSONV1::OrderedHash['saslContinue', 1, 'conversationId', response['conversationId'], 'payload', token]
           response = db.command(cmd, :check_response => false, :socket => socket)
         end
         response
