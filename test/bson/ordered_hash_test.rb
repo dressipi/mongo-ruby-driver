@@ -255,7 +255,7 @@ class OrderedHashTest < Test::Unit::TestCase
 
   def test_reject_bang_frozen
     @oh.freeze
-    assert_raise_error RuntimeError, "can't modify frozen" do
+    assert_raise_error FrozenError, "can't modify frozen" do
       @oh.reject! { |k, v| v > 0 }
     end
   end
