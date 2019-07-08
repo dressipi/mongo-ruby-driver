@@ -1,14 +1,14 @@
 Gem::Specification.new do |s|
-  s.name              = 'bsonv1_ext'
+  s.name              = 'mongov1'
 
   s.version           = File.read(File.join(File.dirname(__FILE__), 'VERSION'))
   s.platform          = Gem::Platform::RUBY
   s.authors           = ['Emily Stolfo', 'Durran Jordan', 'Gary Murakami', 'Tyler Brock', 'Brandon Black']
   s.email             = 'mongodb-dev@googlegroups.com'
   s.homepage          = 'http://www.mongodb.org'
-  s.summary           = 'C extensions for Ruby BSON.'
-  s.description       = 'C extensions to accelerate the Ruby BSON serialization. For more information about BSON, see http://bsonspec.org.  For information about MongoDB, see http://www.mongodb.org.'
-  s.rubyforge_project = 'bson_ext'
+  s.summary           = 'Ruby driver for MongoDB'
+  s.description       = 'A Ruby driver for MongoDB. For more information about Mongo, see http://www.mongodb.org.'
+  s.rubyforge_project = 'mongo'
   s.license           = 'Apache License Version 2.0'
 
   if File.exists?('gem-private_key.pem')
@@ -18,12 +18,14 @@ Gem::Specification.new do |s|
     warn 'Warning: No private key present, creating unsigned gem.'
   end
 
-  s.files             = ['bson_ext.gemspec', 'LICENSE', 'VERSION']
-  s.files             += Dir['ext/**/*.rb'] + Dir['ext/**/*.c'] + Dir['ext/**/*.h']
+  s.files             = ['mongov1.gemspec', 'LICENSE', 'VERSION']
+  s.files             += ['README.md', 'Rakefile', 'bin/mongo_console']
+  s.files             += ['lib/mongov1.rb'] + Dir['lib/mongov1/**/*.rb']
 
-  s.require_paths     = ['ext/bson_ext']
-  s.extensions        = ['ext/cbson/extconf.rb']
+  s.test_files        = Dir['test/**/*.rb'] - Dir['test/bson/*']
+  s.executables       = ['mongo_console']
+  s.require_paths     = ['lib']
   s.has_rdoc          = 'yard'
 
-  s.add_dependency('bsonv1', "~> #{s.version}")
+  s.add_dependency('bsonv1', "#{s.version}")
 end

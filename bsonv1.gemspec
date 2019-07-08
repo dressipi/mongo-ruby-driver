@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
     warn 'Warning: No private key present, creating unsigned gem.'
   end
 
-  s.files             = ['bson.gemspec', 'LICENSE', 'VERSION']
+  s.files             = ['bsonv1.gemspec', 'LICENSE', 'VERSION']
   s.files             += ['bin/b2json', 'bin/j2bson', 'lib/bsonv1.rb']
   s.files             += Dir['lib/bsonv1/**/*.rb']
 
